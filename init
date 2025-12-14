@@ -1,0 +1,35 @@
+#!/bin/zsh
+
+# =========================================================
+# install/init:
+# Automated core system installation script for new systems
+# Author: https://github.com/barabasz
+# License: MIT
+# =========================================================
+
+# This script is meant to be run on a fresh system this way:
+# source <(curl -fsSL bit.ly/install-base)
+
+# Script summary:
+# - sets up initial environment variables
+# - checks and installs Homebrew if missing
+# - checks and installs git and gh if missing
+# - clones install, config and lib repositories
+# - installs zsh shell and sets it as default
+# - installs omz (Oh My Zsh) and oh-my-posh 
+# - makes symbolic links for zsh, omz and oh-my-posh configurations
+# - reloads zsh to apply changes
+
+# set terminal type to support colors
+export TERM=xterm-256color
+
+# Load colors
+r=$(tput setaf 1)    # red
+g=$(tput setaf 2)    # green
+y=$(tput setaf 3)    # yellow
+c=$(tput setaf 6)    # cyan
+w=$(tput setaf 7)    # white
+x=$(tput sgr0)       # reset
+
+
+
