@@ -66,7 +66,10 @@ print_header() {
     local text="Header: $1"
     local len=${#text}
     local line=""
+    local i
+    for ((i=0; i<len; i++)); do line+="━"; done
     printf '%s%s%s%s\n' "$c" "█ " "$text" "$x"
+    printf '%s%s%s\n' "$c" "$line" "$x"
 }
 
 # =========================================================
