@@ -1,6 +1,6 @@
 # install
 
-Installation scripts for Linus, macOS, and Windows
+Installation scripts for Linux, macOS, and Windows
 
 ```bash
 install/
