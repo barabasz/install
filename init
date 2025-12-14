@@ -4,11 +4,13 @@
 # install/init:
 # Automated core system installation script for new systems
 # Author: https://github.com/barabasz
+# Repository: https://github.com/barabasz/install
+# Date: 2024-06-15
 # License: MIT
 # =========================================================
 
 # This script is meant to be run on a fresh system this way:
-# source <(curl -fsSL bit.ly/install-base)
+# source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/main/init)
 
 # Script summary:
 # - sets up initial environment variables
@@ -18,7 +20,16 @@
 # - installs zsh shell and sets it as default
 # - installs omz (Oh My Zsh) and oh-my-posh 
 # - makes symbolic links for zsh, omz and oh-my-posh configurations
+# - sets locale settings
 # - reloads zsh to apply changes
+
+# =========================================================
+# Initial environment setup
+# =========================================================
+
+# Temporary locale settings to avoid issues during installation
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 
 # set terminal type to support colors
 export TERM=xterm-256color
@@ -31,5 +42,45 @@ c=$(tput setaf 6)    # cyan
 w=$(tput setaf 7)    # white
 x=$(tput sgr0)       # reset
 
+# =========================================================
+# Helper functions
+# =========================================================
+
+# Print formatted title in a box (cyan frame, white text)
+# Usage: print_title "some text"
+print_title() {
+    local text="Title: $1"
+    local len=${#text}
+    local line=""
+    local i
+    for ((i=0; i<len; i++)); do line+="━"; done
+    
+    printf '%s┍━%s━┑%s\n' "$y" "$line" "$x"
+    printf '%s│%s %s %s│%s\n' "$y" "$w" "$text" "$y" "$x"
+    printf '%s┕━%s━┙%s\n' "$y" "$line" "$x"
+}
+
+# Print formatted header with underline (yellow line, white text)
+# Usage: print_header "some text"
+print_header() {
+    local text="Header: $1"
+    local len=${#text}
+    local line=""
+    local i
+    for ((i=0; i<len; i++)); do line+="─"; done
+    
+    printf '%s%s%s\n' "$c" "$text" "$x"
+    printf '%s%s%s\n' "$c" "$line" "$x"
+}
+
+# =========================================================
+# Main function
+# =========================================================
+
+print_title "Core System Installation Script"
+
+# Homebrew Setup ==========================================
+
+print_header "Setting up Homebrew..."
 
 
