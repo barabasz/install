@@ -295,8 +295,8 @@ is_omz_installed() {
 # Usage: lns source target
 lns() {
     local source target target_dir current
-    source="$(realpath -s "$1")"
-    target="$(realpath -s "$2")"
+    source="$(realpath "$1")"
+    target="$(realpath "$2")"
     target_dir="$(dirname "$target")"
     
     # Validate: source must exist
