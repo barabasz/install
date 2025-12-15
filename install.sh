@@ -75,11 +75,6 @@ mkdir -p $XDG_DATA_HOME
 mkdir -p $XDG_STATE_HOME
 mkdir -p $LOGDIR
 mkdir -p $VENVDIR
-# Ubuntu/Debian fix for Homebrew
-if ! is_macos; then
-    sudo mkdir -p /home/linuxbrew/
-    sudo chmod 755 /home/linuxbrew/
-fi
 
 # Load colors
 r=$(tput setaf 1)    # red
@@ -507,6 +502,11 @@ brew_shellenv
 
 if ! is_installed brew; then
     print_start "Homebrew not found. Installing Homebrew..."
+    # Ubuntu/Debian fix for Homebrew
+    if ! is_macos; then
+        sudo mkdir -p /home/linuxbrew/
+        sudo chmod 755 /home/linuxbrew/
+    fi
     install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || return 1
     # Execute shellenv after brew installation
     brew_shellenv
