@@ -22,8 +22,8 @@
 # 8. oh-my-posh setup
 # 9. Finalization
 
-local step=1
-local steps=9
+step=1
+steps=9
 
 # =========================================================
 # Initial environment setup
