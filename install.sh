@@ -249,11 +249,11 @@ run_silent() {
 }
 
 # Install command silently, log output to file
-# Usage: install_silent "name" "logfile" command [args...]
+# Usage: install_silent "app_name" command [args...]
 # Example: install_silent "gh" brew install gh || return 1
 install_silent() {
     local name="$1"
-    local log="$LOGDIR/${step}_${name}.log"
+    local log="$LOGDIR/${step}_installing_${name}.log"
     shift
     local cmd="$*"
     
@@ -436,7 +436,7 @@ install_omz_plugin() {
         local pdir=$ZSH_CUSTOM/plugins/$1
         print_info "Installing $1"
         [[ -d $pdir ]] && rm -rf $pdir
-        git clone $repo $pdir
+        install_silent "$1" git clone $repo $pdir
 }
 
 # =========================================================
@@ -481,7 +481,7 @@ if ! is_installed sudo; then
     print_start "sudo not found. Installing sudo..."
     if is_debian_based; then
         # Installing sudo
-        install_silent "sudo" "sudo_install" su -c "apt-get install -qq sudo" || return 1
+        install_silent "sudo" su -c "apt-get install -qq sudo" || return 1
         local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
     fi
@@ -517,10 +517,10 @@ print_header "git setup"
 if ! is_installed git; then
     print_start "Git not found. Installing Git..."
     if is_macos; then
-        install_silent "git" "git_install" xcode-select --install || return 1
+        install_silent "git" xcode-select --install || return 1
     elif is_linux; then
         run_silent "apt_update" sudo apt update || return 1
-        install_silent "git" "git_install" sudo apt install git -y || return 1
+        install_silent "git" sudo apt install git -y || return 1
     fi
     print_done "Git installed."
 else
@@ -545,7 +545,7 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || return 1
+    install_silent "brew" /bin/bash -c "$(curl -fsSL $brew_script_url)" || return 1
     # Execute shellenv after brew installation
     brew_shellenv
     print_done "Homebrew installed."
@@ -575,7 +575,7 @@ if ! is_installed gh; then
     print_start "GitHub CLI not found. Installing gh..."
 
     if is_macos; then
-        install_silent "gh" "gh_install" brew install gh || return 1
+        install_silent "gh" brew install gh || return 1
     elif is_linux; then
         (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
             && sudo mkdir -p -m 755 /etc/apt/keyrings \
@@ -609,10 +609,16 @@ done
 print_done "Repositories cloned successfully."
 
 print_start "Symlinking directories and files..."
-# Library
+
+# lib - whole directory
 lns "$GHLIBDIR" "$LIBDIR"
-# Bindir
-lns "$GHBINDIR" "$BINDIR"
+
+# bin - individual subdirectories
+dirs=("common" "linux" "macos" "test" "windows")
+for dir in "${dirs[@]}"; do
+    lns "$GHBINDIR/$dir" "$BINDIR/$dir"
+done
+
 # Apps
 repos=("bash" "gh" "git" "mc" "omp" "zsh")
 for app in "${repos[@]}"; do
@@ -667,7 +673,7 @@ print_header "Oh My Zsh setup"
 
 if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
-    install_silent "omz" "omz_install" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || return 1
+    install_silent "omz" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
 else
@@ -714,9 +720,9 @@ print_header "Basic tools & finalization"
 if ! is_installed mc; then
     print_start "Midnight Commander not found. Installing mc..."
     if is_macos; then
-        install_silent "mc" "mc_install" brew install mc || return 1
+        install_silent "mc" brew install mc || return 1
     elif is_linux; then
-        install_silent "mc" "mc_install" sudo apt install mc -y || return 1
+        install_silent "mc" sudo apt install mc -y || return 1
     fi
     print_done "Midnight Commander installed."
 else
@@ -727,9 +733,9 @@ print_version mc
 if ! is_installed htop; then
     print_start "htop not found. Installing htop..."
     if is_macos; then
-        install_silent "htop" "htop_install" brew install htop || return 1
+        install_silent "htop" brew install htop || return 1
     elif is_linux; then
-        install_silent "htop" "htop_install" sudo apt install htop -y || return 1
+        install_silent "htop" sudo apt install htop -y || return 1
     fi
     print_done "htop installed."
 else
