@@ -17,11 +17,11 @@
 # 2. Git setup
 # 3. Homebrew setup
 # 4. GitHub CLI setup
-# 5. Cloning & Linking Repositories
+# 5. Repositories setup
 # 6. Zsh setup
 # 7. Oh My Zsh setup
-# 8. oh-my-posh setup
-# 9. Finalization
+# 8. Oh My Posh setup
+# 9. Basic tools & finalization
 
 # =========================================================
 # Initial environment setup
@@ -406,7 +406,7 @@ zsh_cleanup() {
 # Usage: git_clone "repository_name" "log_prefix"
 git_clone() {
     local repo="https://github.com/barabasz/${1}.git"
-    local log="$LOGDIR/${2}_git_${1}_clone"
+    local log="git_${1}_clone"
     run_silent "$log" git clone "$repo"
     if [[ $? -ne 0 ]]; then
         print_error "Failed to clone ${1} repository."
@@ -451,7 +451,7 @@ fi
 # 1. Sudo Setup (Linux only)
 # ---------------------------------------------------------
 
-print_header "Setting up sudo..."
+print_header "sudo setup"
 
 if ! is_installed sudo; then
     print_start "sudo not found. Installing sudo..."
@@ -480,7 +480,7 @@ fi
 # 2. Git Setup
 # ---------------------------------------------------------
 
-print_header "Setting up Git..."
+print_header "git setup"
 
 if ! is_installed git; then
     print_start "Git not found. Installing Git..."
@@ -500,7 +500,7 @@ print_version git
 # 3. Homebrew Setup
 # ---------------------------------------------------------
 
-print_header "Setting up Homebrew..."
+print_header "homebrew setup"
 
 # Execute shellenv if brew is installed
 brew_shellenv
@@ -531,7 +531,7 @@ print_done "Homebrew updated."
 # 4. GitHub CLI Setup
 # ---------------------------------------------------------
 
-print_header "Setting up GitHub CLI..."
+print_header "github cli setup"
 
 if ! is_installed gh; then
     print_start "GitHub CLI not found. Installing gh..."
@@ -556,16 +556,16 @@ fi
 print_version gh
 
 # ---------------------------------------------------------
-# 5. Cloning & Linking Repositories
+# 5. Repositories setup
 # ---------------------------------------------------------
 
-print_header "Cloning & Linking Repositories..."
+print_header "Repositories setup"
 
 print_start "Cloning repositories..."
 cd $GHDIR 
 repos=("bin" "config" "install" "lib")
 for repo in "${repos[@]}"; do
-    git_clone "$repo" "$step" || exit 1
+    git_clone "$repo" || exit 1
 done
 print_done "Repositories cloned successfully."
 
@@ -580,17 +580,13 @@ for app in "${repos[@]}"; do
     print_info "Linking $app configuration..."
     lnconf "$app"
 done
-
-# zsh cleanup and linking
-zsh_cleanup
-
-print_done "Repositories cloned and linked."
+print_done "Directories and files symlinked."
 
 # ---------------------------------------------------------
 # 6. Zsh Setup
 # ---------------------------------------------------------
 
-print_header "Setting up Zsh..."
+print_header "zsh setup"
 
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
@@ -633,7 +629,7 @@ print_done "Bash configuration linked."
 # 7. Oh My Zsh Setup
 # ---------------------------------------------------------
 
-print_header "Setting up Oh My Zsh..."
+print_header "Oh My Zsh setup"
 
 if ! is_omz_installed; then
     [[ ! -n $ZSH ]] && ZSH=$HOME/.config/omz
@@ -657,10 +653,10 @@ else
 fi
 
 # ---------------------------------------------------------
-# 8. oh-my-posh Setup
+# 8. Oh My Posh Setup
 # ---------------------------------------------------------
 
-print_header "Setting up oh-my-posh..."
+print_header "Oh My Posh Setup"
 
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
@@ -672,10 +668,23 @@ fi
 print_version oh-my-posh
 
 # ---------------------------------------------------------
-# 9. Finalization
+# 9. Basic tools & finalization
 # ---------------------------------------------------------
 
-print_header "Finalizing installation..."
+print_header "Basic tools & finalization"
 
-# logic
+if ! is_installed mc; then
+    print_start "Midnight Commander not found. Installing mc..."
+    if is_macos; then
+        install_silent "mc" "mc_install" brew install mc || exit 1
+    elif is_linux; then
+        install_silent "mc" "mc_install" sudo apt install mc -y || exit 1
+    fi
+    print_done "Midnight Commander installed."
+else
+    print_info "Midnight Commander is already installed."
+fi
+print_version mc
+
+
 
