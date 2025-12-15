@@ -435,13 +435,6 @@ if [[ $? -ne 0 ]]; then
     return 1
 fi
 
-# Update apt package lists on Linux systems
-if ! is_macos; then
-    print_start "Updating apt package lists..."
-    run_silent "apt_update_initial" sudo apt update
-    print_done "Package lists updated."
-fi
-
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
 # ---------------------------------------------------------
@@ -451,6 +444,13 @@ print_header "sudo setup"
 if ! is_installed sudo; then
     print_start "sudo not found. Installing sudo..."
     if is_debian_based; then
+        # Update apt package lists on Linux systems
+        if ! is_macos; then
+            print_info "Updating apt package lists..."
+            run_silent "apt_update_initial" su -c "sudo apt update"
+            print_done "Package lists updated."
+        fi
+        # Installing sudo
         install_silent "sudo" "sudo_install" su -c "apt-get install -qq sudo" || return 1
         local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
