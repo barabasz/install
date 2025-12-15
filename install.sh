@@ -92,6 +92,7 @@ x=$(tput sgr0)       # reset
 # Installation script URLs
 brew_script_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+omp_script_url="https://ohmyposh.dev/install.sh"
 
 # =========================================================
 # Helper functions
@@ -161,11 +162,23 @@ print_header() {
     step=$((step + 1))
 }
 
+# Print new line
+new_line() {
+    echo -e "\n"
+}
+
 # Print info message (cyan info symbol)
 # Usage: print_info "some text"
 print_info() {
     local text="$1"
     echo -e "${c}ℹ ${text}${x}"
+}
+
+# Print start message with white star
+# Usage: print_start "some text"
+print_start() {
+    local text="$1"
+    echo -e "${w}★ ${text}${x}"
 }
 
 # Print done message with green checkmark
@@ -385,6 +398,8 @@ zsh_cleanup() {
     rm -f $HOME/.zprofile
     rm -f $HOME/.zlogin
     rm -f $HOME/.zlogout
+    rm -f $HOME/.bash_history
+    rm -f $HOME/.bash_logout
     lns "$GHCONFDIR/zsh/.zshenv" "$HOME/.zshenv"
 }
 
@@ -413,7 +428,8 @@ fi
 
 # Update apt package lists on Linux systems
 if ! is_macos; then
-    print_info "Updating apt package lists..."
+    new_line
+    print_start "Updating apt package lists..."
     run_silent "apt_update_initial" sudo apt update
     print_done "Package lists updated."
 fi
@@ -425,7 +441,7 @@ fi
 print_header "Setting up sudo..."
 
 if ! is_installed sudo; then
-    print_info "sudo not found. Installing sudo..."
+    print_start "sudo not found. Installing sudo..."
     if is_debian_based; then
         install_silent "sudo" "sudo_install" su -c "apt-get install -qq sudo" || exit 1
         local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
@@ -453,7 +469,7 @@ fi
 print_header "Setting up Git..."
 
 if ! is_installed git; then
-    print_info "Git not found. Installing Git..."
+    print_start "Git not found. Installing Git..."
     if is_macos; then
         install_silent "git" "git_install" xcode-select --install || exit 1
     elif is_linux; then
@@ -475,7 +491,7 @@ print_header "Setting up Homebrew..."
 brew_shellenv
 
 if ! is_installed brew; then
-    print_info "Homebrew not found. Installing Homebrew..."
+    print_start "Homebrew not found. Installing Homebrew..."
     install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || exit 1
     # Execute shellenv after brew installation
     brew_shellenv
@@ -485,12 +501,12 @@ fi
 print_version brew
 
 # Disable analytics
-print_info "Disabling Homebrew analytics..."
+print_start "Disabling Homebrew analytics..."
 run_silent "brew_analytics_disable" brew analytics off
 print_done "Homebrew analytics disabled."
 
 # Update Homebrew
-print_info "Updating Homebrew..."
+print_start "Updating Homebrew..."
 run_silent "brew_update" brew update
 run_silent "brew_upgrade" brew upgrade
 print_done "Homebrew updated."
@@ -499,10 +515,10 @@ print_done "Homebrew updated."
 # 4. GitHub CLI Setup
 # ---------------------------------------------------------
 
-print_header "Setting up Github CLI..."
+print_header "GitHub CLI not found. Installing gh..."
 
 if ! is_installed gh; then
-    print_info "Installing GitHub CLI..."
+    print_start "Installing GitHub CLI..."
 
     if is_macos; then
         install_silent "gh" "gh_install" brew install gh || exit 1
@@ -529,7 +545,7 @@ print_version gh
 
 print_header "Cloning repositories..."
 
-cd $GHDIR
+cd $GHDIR 
 repos=("bin" "config" "install" "lib")
 for repo in "${repos[@]}"; do
     print_info "Cloning $repo..."
@@ -547,10 +563,7 @@ lns "$GHBINDIR" "$BINDIR"
 # zsh cleanup and linking
 zsh_cleanup
 
-
-
-
-# logic
+print_done "Repositories cloned and linked."
 
 # ---------------------------------------------------------
 # 6. Zsh Setup
@@ -628,6 +641,15 @@ fi
 # ---------------------------------------------------------
 
 print_header "Setting up oh-my-posh..."
+
+if ! is_installed oh-my-posh; then
+    print_start "oh-my-posh not found. Installing oh-my-posh..."
+    curl -s $omp_script_url | bash -s -- -d "$XDG_BIN_HOME" || exit 1
+    print_done "oh-my-posh installed."
+else
+    print_info "oh-my-posh is already installed."
+fi
+print_version oh-my-posh
 
 # ---------------------------------------------------------
 # 9. Finalization
