@@ -295,15 +295,21 @@ is_omz_installed() {
 # Usage: lns source target
 lns() {
     local source target target_dir current
-    source="$(realpath "$1")"
-    target="$(realpath "$2")"
-    target_dir="$(dirname "$target")"
     
-    # Validate: source must exist
-    if [[ ! -e "$source" ]]; then
-        print_error "Source does not exist: $source"
+    # Source must exist and be absolute
+    if [[ ! -e "$1" ]]; then
+        print_error "Source does not exist: $1"
         return 1
     fi
+    source="$(realpath "$1")"
+    
+    # Target - make absolute but don't require it to exist
+    if [[ "$2" = /* ]]; then
+        target="$2"
+    else
+        target="$PWD/$2"
+    fi
+    target_dir="$(dirname "$target")"
     
     # Create parent directory for the symlink if needed
     if [[ ! -d "$target_dir" ]]; then
@@ -312,16 +318,14 @@ lns() {
     
     # Handle existing target
     if [[ -L "$target" ]]; then
-        # Target is a symlink - check if it already points to source
         current="$(readlink "$target")"
         if [[ "$current" == "$source" ]]; then
-            return 0  # Already correct, nothing to do
+            return 0  # Already correct
         else
-            rm "$target"  # Points elsewhere, remove and recreate
+            rm "$target"  # Points elsewhere, remove
         fi
     elif [[ -e "$target" ]]; then
-        # Target is a real file/directory - backup before replacing
-        mv "$target" "${target}.bak"
+        mv "$target" "${target}.bak"  # Backup real file/dir
     fi
     
     ln -s "$source" "$target"
