@@ -635,15 +635,16 @@ print_start "Symlinking directories and files..."
 lns "$GHLIBDIR" "$LIBDIR"
 
 # bin - individual subdirectories
+[[ -L $BINDIR ]] && rm -rf $BINDIR
 dirs=("common" "linux" "macos" "test" "windows")
 for dir in "${dirs[@]}"; do
     lns "$GHBINDIR/$dir" "$BINDIR/$dir"
 done
+lns "$GHDIR/install" "$BINDIR/install"
 
 # Apps
 repos=("bash" "gh" "git" "mc" "nvim" "omp" "zsh")
 for app in "${repos[@]}"; do
-    print_info "Linking $app configuration..."
     lnconf "$app"
 done
 print_done "Directories and files symlinked."
@@ -793,6 +794,7 @@ if ! is_installed mc; then
     fi
     print_done "Midnight Commander installed."
 else
+    new_line
     print_info "Midnight Commander is already installed."
 fi
 # Reinstalling mc skins
@@ -825,6 +827,7 @@ if ! is_installed htop; then
     fi
     print_done "htop installed."
 else
+    new_line
     print_info "htop is already installed."
 fi
 print_version htop
