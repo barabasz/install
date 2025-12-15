@@ -728,6 +728,10 @@ if ! is_installed mc; then
 else
     print_info "Midnight Commander is already installed."
 fi
+# Reinstalling mc skins
+print_info "Reinstalling mc skins..."
+mkdir -p "$XDG_DATA_HOME/mc"
+lns "$GHCONFDIR/mc/skins" "$XDG_DATA_HOME/mc/skins"
 print_version mc
 
 if ! is_installed htop; then
