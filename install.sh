@@ -443,6 +443,9 @@ install_omz_plugin() {
 # Main function
 # =========================================================
 
+## Set script counters
+step=1 && steps=9
+
 # Load color variables
 load_colors
 
@@ -474,10 +477,6 @@ if ! is_macos; then
     run_silent "apt_update_initial" su -c "sudo apt update"
     print_done "Package lists updated."
 fi
-
-## Set script counters
-step=1
-steps=9
 
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
