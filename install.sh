@@ -471,13 +471,6 @@ fi
 # Create base directories
 make_base_dirs
 
-# Update apt package lists on Linux systems
-if ! is_macos; then
-    print_info "Updating apt package lists..."
-    run_silent "apt_update_initial" su -c "sudo apt update"
-    print_done "Package lists updated."
-fi
-
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
 # ---------------------------------------------------------
@@ -506,6 +499,13 @@ if [[ $? -ne 0 ]]; then
     return 1
 else
     print_done "Sudo access granted."
+fi
+
+# Update apt package lists on Linux systems
+if ! is_macos; then
+    print_start "Updating apt package lists..."
+    run_silent "apt_update_initial" sudo apt update
+    print_done "Package lists updated."
 fi
 
 # ---------------------------------------------------------
