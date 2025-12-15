@@ -658,12 +658,6 @@ else
     return 1
 fi
 
-# bash fallback
-print_start "Linking fallback bash configuration..."
-lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
-lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
-print_done "Bash configuration linked."
-
 # ---------------------------------------------------------
 # 7. Oh My Zsh Setup
 # ---------------------------------------------------------
@@ -730,5 +724,31 @@ else
 fi
 print_version mc
 
+if ! is_installed htop; then
+    print_start "htop not found. Installing htop..."
+    if is_macos; then
+        install_silent "htop" "htop_install" brew install htop || return 1
+    elif is_linux; then
+        install_silent "htop" "htop_install" sudo apt install htop -y || return 1
+    fi
+    print_done "htop installed."
+else
+    print_info "htop is already installed."
+fi
+print_version htop
 
+# Bash cleanup and fallback configuration
+print_start "Fallback bash configuration..."
+# Remove old bash config files...
+rm -f $HOME/.bash*
+# ...and link new ones as fallback
+lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
+lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
+print_done "Bash configuration linked."
 
+print_title "Installation Completed"
+echo -e "The core shell installation and configuration is now complete.\n"
+echo -e "Restart your terminal or log out and back in for all changes to take effect.\n"
+
+# Attempt to shwitch to zsh immediately
+exec zsh
