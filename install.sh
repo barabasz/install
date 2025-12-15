@@ -249,8 +249,11 @@ print_start "Symlinking directories and files..."
 # lib - whole directory
 lns "$GHLIBDIR" "$LIBDIR"
 
-# bin - individual subdirectories
-[[ -L $BINDIR ]] && rm -rf $BINDIR
+# Remove old bin structure if exists
+[[ -e $BINDIR ]] && rm -rf $BINDIR
+# Create fresh directory
+mkdir -p $BINDIR
+# Create new bin structure
 dirs=("common" "linux" "macos" "test" "windows")
 for dir in "${dirs[@]}"; do
     lns "$GHBINDIR/$dir" "$BINDIR/$dir"
