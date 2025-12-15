@@ -14,14 +14,18 @@
 
 # Script summary:
 # 1. Checks and install sudo if missing (on Linux systems)
-# 2. Checks and installs Homebrew if missing
-# 3. Checks and installs git and gh if missing
-# 4. Clones install, config and lib repositories
+# 2. Checks and installs git if missing
+# 3. Checks and installs Homebrew if missing
+# 4. Checks and installs GitHub CLI if missing
+# 5. Clones install, config and lib repositories
 # - installs zsh shell and sets it as default
 # - installs omz (Oh My Zsh) and oh-my-posh 
 # - makes symbolic links for zsh, omz and oh-my-posh configurations
 # - sets locale settings
 # - reloads zsh to apply changes
+
+local step=1
+local steps=5
 
 # =========================================================
 # Initial environment setup
@@ -121,13 +125,14 @@ print_title() {
 # Print formatted header with underline (yellow line, white text)
 # Usage: print_header "some text"
 print_header() {
-    local text="$1"
+    local text="${step}/${steps}: $1"
     local len=${#text}+2
     local line=""
     local i
     for ((i=0; i<len; i++)); do line+="▔"; done
     printf '\n%s%s%s%s\n' "$c" "█ " "$text" "$x"
     printf '%s%s%s\n' "$c" "$line" "$x"
+    step=$((step + 1))
 }
 
 # Print info message (cyan info symbol)
@@ -141,7 +146,7 @@ print_info() {
 # Usage: print_done "some text"
 print_done() {
     local text="$1"
-    echo -e "${g}✔ ${text}${x}\n"
+    echo -e "${g}✔ ${text}${x}"
 }
 
 # Print error message with red cross
@@ -202,7 +207,7 @@ brew_shellenv() {
 print_title "Core System Installation Script"
 
 echo -e "\nThis script will install and configure following components on your system:"
-echo -e "• ${g}sudo${x} • ${g}brew${x} • ${g}git${x} • ${g}zsh${x} • ${g}Oh My Zsh${x} • ${g}oh-my-posh${x} •\n"
+echo -e "• ${g}sudo${x} • ${g}git${x} • ${g}brew${x} • ${g}gh${x} • ${g}zsh${x} • ${g}Oh My Zsh${x} • ${g}oh-my-posh${x} •\n"
 prompt_continue
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -215,6 +220,7 @@ fi
 print_header "Setting up sudo..."
 
 if ! is_installed sudo; then
+    print_info "sudo not found. Installing sudo..."
     if is_debian_based; then
         su -c "apt-get install -qq sudo 2> /dev/null"
         if [[ $? -eq 0 ]]; then
@@ -227,14 +233,54 @@ if ! is_installed sudo; then
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
     fi
 else
-    print_done "sudo is already installed: $(sudo --version | head -n1)"
+    print_done "sudo is already installed."
 fi
+print_info "sudo version:${x} $(sudo --version | head -n1)"
 
 # Force sudo password prompt
+echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
 sudo echo > /dev/null
 
 # ---------------------------------------------------------
-# 2. Homebrew Setup
+# 2. Git Setup
+# ---------------------------------------------------------
+
+print_header "Setting up Git..."
+
+if ! is_installed git; then
+    print_info "Git not found. Installing Git..."
+
+    if is_macos; then
+        xcode-select --install &> "$TMP/git_install.log"
+        if [[ $? -eq 0 ]]; then
+            print_done "Git installed successfully."
+        else
+            print_error "Git installation failed. Exiting."
+            exit 1
+        fi
+    elif is_linux; then
+        sudo apt update && sudo apt install git -y &> "$TMP/git_install.log"
+        if [[ $? -eq 0 ]]; then
+            print_done "Git installed successfully."
+        else
+            print_error "Git installation failed. Exiting."
+            exit 1
+        fi
+    fi
+
+else
+    print_done "Git is already installed."
+fi
+print_info "Git version:${x} $(git --version)"
+
+
+
+# Cloning Repositories ====================================
+
+
+
+# ---------------------------------------------------------
+# 3. Homebrew Setup
 # ---------------------------------------------------------
 
 print_header "Setting up Homebrew..."
@@ -263,8 +309,9 @@ if ! is_installed brew; then
     # Execute shellenv after brew installation
     brew_shellenv
 else
-    print_done "Homebrew is already installed: $(brew --version | head -n1)"
+    print_done "Homebrew is already installed"
 fi
+print_info "Homebrew version:${x} $(brew --version | head -n1)"
 
 # Disable analytics
 print_info "Disabling Homebrew analytics..."
@@ -278,15 +325,35 @@ brew upgrade &> "$TMP/brew_upgrade.log"
 print_done "Homebrew updated."
 
 # ---------------------------------------------------------
-# 3. Git Setup
+# 4. GitHub CLI Setup
 # ---------------------------------------------------------
-
-print_header "Setting up Git..."
-
-# Logic to install git if missing would go here
 
 print_header "Setting up Github CLI..."
 
-# Logic to install gh if missing would go here
+if ! is_installed gh; then
+    print_info "Installing GitHub CLI..."
 
-# Cloning Repositories ====================================
+    if is_macos; then
+        brew install gh &> "$TMP/gh_install.log"
+        if [[ $? -eq 0 ]]; then
+            print_done "GitHub CLI installed successfully."
+        else
+            print_error "GitHub CLI installation failed. Exiting."
+            exit 1
+        fi
+    elif is_linux; then
+        (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+            && sudo mkdir -p -m 755 /etc/apt/keyrings \
+            && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+            && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+            && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+            && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+            && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+            && sudo apt update \
+            && sudo apt install gh -y
+    fi
+
+else
+    print_done "GitHub CLI is already installed."
+fi
+print_info "GitHub CLI version:${x} $(gh --version | head -n1)"
