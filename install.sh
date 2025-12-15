@@ -401,7 +401,7 @@ if is_linux && ! has_kitty_terminfo; then
 fi
 
 print_title "Core Shell Installation Script"
-echo -e "\nThis script will install and configure following components on your system:"
+echo -e "This script will install and configure following components on your system:"
 print_commands
 echo -e "Log directory: ${y}$LOGDIR${x}\n"
 
@@ -411,9 +411,10 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
+# Update apt package lists on Linux systems
 if ! is_macos; then
     print_info "Updating apt package lists..."
-    run1
+    run_silent "apt_update_initial" sudo apt update
     print_done "Package lists updated."
 fi
 
@@ -438,6 +439,12 @@ print_version sudo
 # Force sudo password prompt
 echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
 sudo echo > /dev/null
+if [[ $? -ne 0 ]]; then
+    print_error "Failed to obtain sudo access."
+    exit 1
+else
+    print_done "Sudo access granted."
+fi
 
 # ---------------------------------------------------------
 # 2. Git Setup
