@@ -17,7 +17,7 @@
 # 2. Git setup
 # 3. Homebrew setup
 # 4. GitHub CLI setup
-# 5. Cloning repositories
+# 5. Cloning & Linking Repositories
 # 6. Zsh setup
 # 7. Oh My Zsh setup
 # 8. oh-my-posh setup
@@ -402,6 +402,21 @@ zsh_cleanup() {
     lns "$GHCONFDIR/zsh/.zshenv" "$HOME/.zshenv"
 }
 
+# Git clone function with error handling
+# Usage: git_clone "repository_name" "log_prefix"
+git_clone() {
+    local repo="https://github.com/barabasz/${1}.git"
+    local log="$LOGDIR/${2}_git_${1}_clone"
+    run_silent "$log" git clone "$repo"
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to clone ${1} repository."
+        print_info "See log: $log"
+        return 1
+    else
+        return 0
+    fi
+}
+
 # =========================================================
 # Main function
 # =========================================================
@@ -427,7 +442,6 @@ fi
 
 # Update apt package lists on Linux systems
 if ! is_macos; then
-    new_line
     print_start "Updating apt package lists..."
     run_silent "apt_update_initial" sudo apt update
     print_done "Package lists updated."
@@ -446,8 +460,9 @@ if ! is_installed sudo; then
         local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
     fi
+    print_done "sudo installed."
 else
-    print_done "sudo is already installed."
+    print_info "sudo is already installed."
 fi
 print_version sudo
 
@@ -475,8 +490,9 @@ if ! is_installed git; then
         run_silent "apt_update" sudo apt update || exit 1
         install_silent "git" "git_install" sudo apt install git -y || exit 1
     fi
+    print_done "Git installed."
 else
-    print_done "Git is already installed."
+    print_info "Git is already installed."
 fi
 print_version git
 
@@ -494,8 +510,9 @@ if ! is_installed brew; then
     install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || exit 1
     # Execute shellenv after brew installation
     brew_shellenv
+    print_done "Homebrew installed."
 else
-    print_done "Homebrew is already installed"
+    print_info "Homebrew is already installed."
 fi
 print_version brew
 
@@ -514,10 +531,10 @@ print_done "Homebrew updated."
 # 4. GitHub CLI Setup
 # ---------------------------------------------------------
 
-print_header "GitHub CLI not found. Installing gh..."
+print_header "Setting up GitHub CLI..."
 
 if ! is_installed gh; then
-    print_start "Installing GitHub CLI..."
+    print_start "GitHub CLI not found. Installing gh..."
 
     if is_macos; then
         install_silent "gh" "gh_install" brew install gh || exit 1
@@ -532,28 +549,27 @@ if ! is_installed gh; then
             && sudo apt update \
             && sudo apt install gh -y
     fi
-
+    print_done "GitHub CLI installed."
 else
     print_done "GitHub CLI is already installed."
 fi
 print_version gh
 
 # ---------------------------------------------------------
-# 5. Cloning Repositories
+# 5. Cloning & Linking Repositories
 # ---------------------------------------------------------
 
-print_header "Cloning repositories..."
+print_header "Cloning & Linking Repositories..."
 
+print_start "Cloning repositories..."
 cd $GHDIR 
 repos=("bin" "config" "install" "lib")
 for repo in "${repos[@]}"; do
-    print_info "Cloning $repo..."
-    git clone "https://github.com/barabasz/${repo}.git" &> "$LOGDIR/${step}_git_${repo}_clone.log"
-    print_done "$repo successfully cloned."
+    git_clone "$repo" "$step" || exit 1
 done
+print_done "Repositories cloned successfully."
 
 print_start "Symlinking directories and files..."
-
 # Library
 lns "$GHLIBDIR" "$LIBDIR"
 # Bindir
@@ -612,7 +628,6 @@ print_start "Linking fallback bash configuration..."
 lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
 lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
 print_done "Bash configuration linked."
-
 
 # ---------------------------------------------------------
 # 7. Oh My Zsh Setup
