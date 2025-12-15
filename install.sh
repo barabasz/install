@@ -565,6 +565,7 @@ print_start "Cloning repositories..."
 cd $GHDIR 
 repos=("bin" "config" "install" "lib")
 for repo in "${repos[@]}"; do
+    rm -rf "$GHDIR/$repo"
     git_clone "$repo" || return 1
 done
 print_done "Repositories cloned successfully."
