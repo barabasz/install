@@ -220,7 +220,7 @@ print_version() {
 
 # Run command silently, log output to file
 # Usage: run_silent "logfile" command [args...]
-# Example: run_silent "chmod" chmod +x "$FILE" || exit 1
+# Example: run_silent "chmod" chmod +x "$FILE" || return 1
 run_silent() {
     local log="$LOGDIR/${step}_$1.log"
     shift
@@ -229,7 +229,7 @@ run_silent() {
     if "$@" &> "$log"; then
         return 0
     else
-        print_error "Failed to execute: $cmd"
+        print_error "Failed to execute: '$cmd'"
         print_info "See log: $log"
         return 1
     fi
@@ -237,7 +237,7 @@ run_silent() {
 
 # Install command silently, log output to file
 # Usage: install_silent "name" "logfile" command [args...]
-# Example: install_silent "gh" brew install gh || exit 1
+# Example: install_silent "gh" brew install gh || return 1
 install_silent() {
     local name="$1"
     local log="$LOGDIR/${step}_${name}.log"
@@ -437,7 +437,7 @@ echo -e "Log directory: ${y}$LOGDIR${x}\n"
 # Prompt user to continue
 prompt_continue
 if [[ $? -ne 0 ]]; then
-    exit 1
+    return 1
 fi
 
 # Update apt package lists on Linux systems
@@ -456,7 +456,7 @@ print_header "sudo setup"
 if ! is_installed sudo; then
     print_start "sudo not found. Installing sudo..."
     if is_debian_based; then
-        install_silent "sudo" "sudo_install" su -c "apt-get install -qq sudo" || exit 1
+        install_silent "sudo" "sudo_install" su -c "apt-get install -qq sudo" || return 1
         local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
     fi
@@ -471,7 +471,7 @@ echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
 sudo echo > /dev/null
 if [[ $? -ne 0 ]]; then
     print_error "Failed to obtain sudo access."
-    exit 1
+    return 1
 else
     print_done "Sudo access granted."
 fi
@@ -485,10 +485,10 @@ print_header "git setup"
 if ! is_installed git; then
     print_start "Git not found. Installing Git..."
     if is_macos; then
-        install_silent "git" "git_install" xcode-select --install || exit 1
+        install_silent "git" "git_install" xcode-select --install || return 1
     elif is_linux; then
-        run_silent "apt_update" sudo apt update || exit 1
-        install_silent "git" "git_install" sudo apt install git -y || exit 1
+        run_silent "apt_update" sudo apt update || return 1
+        install_silent "git" "git_install" sudo apt install git -y || return 1
     fi
     print_done "Git installed."
 else
@@ -507,7 +507,7 @@ brew_shellenv
 
 if ! is_installed brew; then
     print_start "Homebrew not found. Installing Homebrew..."
-    install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || exit 1
+    install_silent "brew" "brew_install" /bin/bash -c "$(curl -fsSL $brew_script_url)" || return 1
     # Execute shellenv after brew installation
     brew_shellenv
     print_done "Homebrew installed."
@@ -537,7 +537,7 @@ if ! is_installed gh; then
     print_start "GitHub CLI not found. Installing gh..."
 
     if is_macos; then
-        install_silent "gh" "gh_install" brew install gh || exit 1
+        install_silent "gh" "gh_install" brew install gh || return 1
     elif is_linux; then
         (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
             && sudo mkdir -p -m 755 /etc/apt/keyrings \
@@ -565,7 +565,7 @@ print_start "Cloning repositories..."
 cd $GHDIR 
 repos=("bin" "config" "install" "lib")
 for repo in "${repos[@]}"; do
-    git_clone "$repo" || exit 1
+    git_clone "$repo" || return 1
 done
 print_done "Repositories cloned successfully."
 
@@ -591,7 +591,7 @@ print_header "zsh setup"
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
     print_start "Zsh not found. Installing Zsh..."
-    run_silent "zsh_install" sudo apt install zsh -y || exit 1
+    run_silent "zsh_install" sudo apt install zsh -y || return 1
 else
     print_done "Zsh is already installed."
 fi
@@ -606,7 +606,7 @@ else
         print_done "Default shell changed to zsh."
     else
         print_error "Failed to change default shell to zsh."
-        exit 1
+        return 1
     fi
 fi
 
@@ -616,7 +616,7 @@ if zsh_cleanup; then
     print_done "Zsh configuration linked."
 else
     print_error "Failed to link Zsh configuration."
-    exit 1
+    return 1
 fi
 
 # bash fallback
@@ -635,7 +635,7 @@ if ! is_omz_installed; then
     [[ ! -n $ZSH ]] && ZSH=$HOME/.config/omz
     [[ ! -n $ZSH_CUSTOM ]] && ZSH_CUSTOM=$ZSH/custom
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
-    install_silent "omz" "omz_install" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || exit 1
+    install_silent "omz" "omz_install" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
 else
@@ -649,7 +649,7 @@ if zsh_cleanup; then
     print_done "Zsh configuration re-linked."
 else
     print_error "Failed to re-link Zsh configuration."
-    exit 1
+    return 1
 fi
 
 # ---------------------------------------------------------
@@ -660,7 +660,7 @@ print_header "Oh My Posh Setup"
 
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
-    curl -s $omp_script_url | bash -s -- -d "$XDG_BIN_HOME" || exit 1
+    curl -s $omp_script_url | bash -s -- -d "$XDG_BIN_HOME" || return 1
     print_done "oh-my-posh installed."
 else
     print_info "oh-my-posh is already installed."
@@ -676,9 +676,9 @@ print_header "Basic tools & finalization"
 if ! is_installed mc; then
     print_start "Midnight Commander not found. Installing mc..."
     if is_macos; then
-        install_silent "mc" "mc_install" brew install mc || exit 1
+        install_silent "mc" "mc_install" brew install mc || return 1
     elif is_linux; then
-        install_silent "mc" "mc_install" sudo apt install mc -y || exit 1
+        install_silent "mc" "mc_install" sudo apt install mc -y || return 1
     fi
     print_done "Midnight Commander installed."
 else
