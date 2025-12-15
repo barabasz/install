@@ -27,10 +27,6 @@
 # Initial environment setup
 # =========================================================
 
-## Script counters
-step=1
-steps=9
-
 ## Folders and paths
 export TMP=$HOME/.tmp
 export TEMP=$TMP
@@ -41,17 +37,23 @@ export CONFDIR=$HOME/.config
 export CACHEDIR=$HOME/.cache
 export ZSH_SESSIONS_DIR=$CACHEDIR/.zsh_sessions
 export VENVDIR=$HOME/.venv
+
 # XDG
 export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$CONFDIR}
 export XDG_CACHE_HOME=${XDG_CACHE_HOME:-$CACHEDIR}
 export XDG_BIN_HOME=${XDG_BIN_HOME:-$HOME/.local/bin}
 export XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 export XDG_STATE_HOME=${XDG_STATE_HOME:-$HOME/.local/state}
+
 # GitHub
 export GHDIR=$HOME/GitHub
 export GHBINDIR=$GHDIR/bin
 export GHLIBDIR=$GHDIR/lib
 export GHCONFDIR=$GHDIR/config
+
+# Oh My Zsh
+export ZSH=$CONFDIR/omz
+export ZSH_CUSTOM=$ZSH/custom
 
 # Temporary locale settings to avoid issues during installation
 export LANG=en_US.UTF-8
@@ -64,34 +66,50 @@ export HOMEBREW_VERBOSE=0
 export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
 
-# Create base directories
-mkdir -p $TMP
-mkdir -p $CACHEDIR
-mkdir -p $ZSH_SESSIONS_DIR
-mkdir -p $CONFDIR
-mkdir -p $XDG_BIN_HOME
-mkdir -p $XDG_BIN_HOME
-mkdir -p $XDG_DATA_HOME
-mkdir -p $XDG_STATE_HOME
-mkdir -p $LOGDIR
-mkdir -p $VENVDIR
-
-# Load colors
-r=$(tput setaf 1)    # red
-g=$(tput setaf 2)    # green
-y=$(tput setaf 3)    # yellow
-c=$(tput setaf 6)    # cyan
-w=$(tput setaf 7)    # white
-x=$(tput sgr0)       # reset
-
-# Installation script URLs
-brew_script_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
-omp_script_url="https://ohmyposh.dev/install.sh"
-
 # =========================================================
 # Helper functions
 # =========================================================
+
+# Load color variables
+load_colors() {
+    if is_installed tput; then
+        # Using tput for better compatibility
+        r=$(tput setaf 1)   # Red
+        g=$(tput setaf 2)   # Green
+        y=$(tput setaf 3)   # Yellow
+        b=$(tput setaf 4)   # Blue
+        p=$(tput setaf 5)   # Purple
+        c=$(tput setaf 6)   # Cyan
+        w=$(tput setaf 7)   # White
+        x=$(tput sgr0)      # Reset
+        return
+    else
+        # Fallback to ANSI codes
+        r='\033[0;31m'      # Red
+        g='\033[0;32m'      # Green
+        y='\033[0;33m'      # Yellow
+        b='\033[0;34m'      # Blue
+        p='\033[0;35m'      # Purple
+        c='\033[0;36m'      # Cyan
+        w='\033[0;37m'      # White
+        x='\033[0m'         # Reset
+    fi
+}
+
+# Create base directories
+make_base_dirs() {
+    mkdir -p $TMP
+    mkdir -p $LOGDIR
+    mkdir -p $BINDIR
+    mkdir -p $CONFDIR
+    mkdir -p $CACHEDIR
+    mkdir -p $ZSH_SESSIONS_DIR
+    mkdir -p $VENVDIR
+    mkdir -p $GHDIR
+    mkdir -p $XDG_BIN_HOME
+    mkdir -p $XDG_DATA_HOME
+    mkdir -p $XDG_STATE_HOME
+}
 
 # Function to print list of things to be installed
 print_commands() {
@@ -411,9 +429,22 @@ git_clone() {
     fi
 }
 
+# Install Oh My Zsh plugin
+# Usage: install_omz_plugin "plugin_name"
+install_omz_plugin() {
+        local repo=https://github.com/zsh-users/$1.git
+        local pdir=$ZSH_CUSTOM/plugins/$1
+        print_info "Installing $1"
+        [[ -d $pdir ]] && rm -rf $pdir
+        git clone $repo $pdir
+}
+
 # =========================================================
 # Main function
 # =========================================================
+
+# Load color variables
+load_colors
 
 # Ensure kitty terminfo is installed for proper terminal support
 if is_linux && ! has_kitty_terminfo; then
@@ -434,12 +465,19 @@ if [[ $? -ne 0 ]]; then
     return 1
 fi
 
+# Create base directories
+make_base_dirs
+
 # Update apt package lists on Linux systems
 if ! is_macos; then
     print_info "Updating apt package lists..."
     run_silent "apt_update_initial" su -c "sudo apt update"
     print_done "Package lists updated."
 fi
+
+## Set script counters
+step=1
+steps=9
 
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
@@ -495,6 +533,7 @@ print_version git
 # 3. Homebrew Setup
 # ---------------------------------------------------------
 
+brew_script_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 print_header "homebrew setup"
 
 # Execute shellenv if brew is installed
@@ -630,11 +669,10 @@ print_done "Bash configuration linked."
 # 7. Oh My Zsh Setup
 # ---------------------------------------------------------
 
+omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 print_header "Oh My Zsh setup"
 
 if ! is_omz_installed; then
-    [[ ! -n $ZSH ]] && ZSH=$HOME/.config/omz
-    [[ ! -n $ZSH_CUSTOM ]] && ZSH_CUSTOM=$ZSH/custom
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     install_silent "omz" "omz_install" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
@@ -643,6 +681,11 @@ else
     print_done "Oh My Zsh is already installed."
 fi
 print_version omz version
+
+# Install Oh My Zsh plugins
+print_start "Installing Oh My Zsh plugins..."
+install_omz_plugin zsh-autosuggestions
+install_omz_plugin zsh-syntax-highlighting
 
 # Link Zsh configuration
 print_start "Re-linking zsh configuration..."
@@ -657,6 +700,7 @@ fi
 # 8. Oh My Posh Setup
 # ---------------------------------------------------------
 
+omp_script_url="https://ohmyposh.dev/install.sh"
 print_header "Oh My Posh Setup"
 
 if ! is_installed oh-my-posh; then
