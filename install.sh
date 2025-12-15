@@ -439,6 +439,27 @@ install_omz_plugin() {
         install_silent "$1" git clone $repo $pdir
 }
 
+# Uncomment locale in /etc/locale.gen
+function uncomment_locale() {
+    sudo sed -i "s/^# *\($1\)/\1/" /etc/locale.gen
+    if grep -q "^$1" /etc/locale.gen; then
+        echo "Locale $1 has been uncommented in /etc/locale.gen."
+    else
+        echo "Failed to uncomment locale $1 in /etc/locale.gen."
+        return 1
+    fi
+}
+
+# Install locale if not present
+function install_locale() {
+    if [[ -z "$(localectl list-locales | grep $1)" ]]; then
+        uncomment_locale $1
+        sudo locale-gen $1 | grep 'done'
+    else
+        echo "Locale $1 already exists."
+    fi
+}
+
 # =========================================================
 # Main function
 # =========================================================
@@ -620,7 +641,7 @@ for dir in "${dirs[@]}"; do
 done
 
 # Apps
-repos=("bash" "gh" "git" "mc" "omp" "zsh")
+repos=("bash" "gh" "git" "mc" "nvim" "omp" "zsh")
 for app in "${repos[@]}"; do
     print_info "Linking $app configuration..."
     lnconf "$app"
@@ -717,6 +738,52 @@ print_version oh-my-posh
 
 print_header "Basic tools & finalization"
 
+# locale --------------------------------------------------
+
+if [[ "$(osname)" != "macos" ]]; then
+    print_start 'Installing locales...'
+    export LC_ALL=C.utf8
+    sudo apt install -yq locales >/dev/null 2>&1
+    lang_pl="pl_PL.UTF-8"
+    lang_en="en_US.UTF-8"
+    install_locale $lang_pl
+    install_locale $lang_en
+    
+    printhead 'Setting locales...'
+    # English language
+    export LANG=$lang_en
+    sudo update-locale LANG=$lang_en
+    export LANGUAGE=$lang_en
+    sudo update-locale LANGUAGE=$lang_en
+    export LC_MESSAGES=$lang_en
+    sudo update-locale LC_MESSAGES=$lang_en
+    # Polish regiional settings
+    export LC_ADDRESS=$lang_pl
+    sudo localectl set-locale LC_ADDRESS=$lang_pl
+    export LC_COLLATE=$lang_pl
+    sudo localectl set-locale LC_COLLATE=$lang_pl
+    export LC_CTYPE=$lang_pl
+    sudo localectl set-locale LC_CTYPE=$lang_pl
+    export LC_IDENTIFICATION=$lang_pl
+    sudo localectl set-locale LC_IDENTIFICATION=$lang_pl
+    export LC_MEASUREMENT=$lang_pl
+    sudo localectl set-locale LC_MEASUREMENT=$lang_pl
+    export LC_MONETARY=$lang_pl
+    sudo localectl set-locale LC_MONETARY=$lang_pl
+    export LC_NAME=$lang_pl
+    sudo localectl set-locale LC_NAME=$lang_pl
+    export LC_NUMERIC=$lang_pl
+    sudo localectl set-locale LC_NUMERIC=$lang_pl
+    export LC_PAPER=$lang_pl
+    sudo localectl set-locale LC_PAPER=$lang_pl
+    export LC_TELEPHONE=$lang_pl
+    sudo localectl set-locale LC_TELEPHONE=$lang_pl
+    export LC_TIME=$lang_pl
+    sudo localectl set-locale LC_TIME=$lang_pl
+    print_done 'Locales installed and set.'
+fi
+
+# mc ------------------------------------------------------
 if ! is_installed mc; then
     print_start "Midnight Commander not found. Installing mc..."
     if is_macos; then
@@ -734,6 +801,21 @@ mkdir -p "$XDG_DATA_HOME/mc"
 lns "$GHCONFDIR/mc/skins" "$XDG_DATA_HOME/mc/skins"
 print_version mc
 
+# bc ------------------------------------------------------
+if ! is_installed bc; then
+    print_start "bc not found. Installing bc..."
+    if is_macos; then
+        install_silent "bc" brew install bc || return 1
+    elif is_linux; then
+        install_silent "bc" sudo apt install bc -y || return 1
+    fi
+    print_done "bc installed."
+else
+    print_info "bc is already installed."
+fi
+print_version bc
+
+# htop ----------------------------------------------------
 if ! is_installed htop; then
     print_start "htop not found. Installing htop..."
     if is_macos; then
