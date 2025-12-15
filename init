@@ -64,6 +64,8 @@ export TERM=xterm-256color
 # Brew environment variables for non-interactive installation
 export HOMEBREW_NO_ENV_HINTS=1
 export HOMEBREW_NO_EMOJI=1
+export HOMEBREW_VERBOSE=0
+export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
 
 # Load colors
@@ -124,7 +126,7 @@ print_header() {
     local line=""
     local i
     for ((i=0; i<len; i++)); do line+="▔"; done
-    printf '%s%s%s%s\n' "$c" "█ " "$text" "$x"
+    printf '\n%s%s%s%s\n' "$c" "█ " "$text" "$x"
     printf '%s%s%s\n' "$c" "$line" "$x"
 }
 
@@ -202,14 +204,18 @@ print_title "Core System Installation Script"
 echo -e "\nThis script will install and configure following components on your system:"
 echo -e "• ${g}sudo${x} • ${g}brew${x} • ${g}git${x} • ${g}zsh${x} • ${g}Oh My Zsh${x} • ${g}oh-my-posh${x} •\n"
 prompt_continue
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
 
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
 # ---------------------------------------------------------
 
+print_header "Setting up sudo..."
+
 if ! is_installed sudo; then
     if is_debian_based; then
-        print_header "Installing sudo..."
         su -c "apt-get install -qq sudo 2> /dev/null"
         if [[ $? -eq 0 ]]; then
             print_done "sudo installed successfully."
@@ -267,7 +273,8 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_info "Updating Homebrew..."
-brew update && brew upgrade &>/dev/null
+brew update &> "$TMP/brew_update.log"
+brew upgrade &> "$TMP/brew_upgrade.log"
 print_done "Homebrew updated."
 
 # ---------------------------------------------------------
