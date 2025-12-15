@@ -1,8 +1,7 @@
 #!/bin/zsh
 
 # =========================================================
-# install/init:
-# Automated core system installation script for new systems
+# Automated core shell installation script for new systems
 # Author: https://github.com/barabasz
 # Repository: https://github.com/barabasz/install
 # Date: 2024-06-15
@@ -12,14 +11,16 @@
 # This script is meant to be run on a fresh system this way:
 # source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/refs/heads/main/init)
 
-# Script summary:
-# 1. Checks and install sudo if missing (on Linux systems)
-# 2. Checks and installs git if missing
-# 3. Checks and installs Homebrew if missing
-# 4. Checks and installs GitHub CLI if missing
-# 5. Clones install, config and lib repositories
-# - installs zsh shell and sets it as default
-# - installs omz (Oh My Zsh) and oh-my-posh 
+# Script steps:
+# 1. sudo setup
+# 2. Git setup
+# 3. Homebrew setup
+# 4. GitHub CLI setup
+# 5. Cloning repositories
+# 6. Symlink directories and files
+# 7. Zsh setup
+# 8. Oh My Zsh setup
+# 9. oh-my-posh setup
 # - makes symbolic links for zsh, omz and oh-my-posh configurations
 # - sets locale settings
 # - reloads zsh to apply changes
@@ -86,6 +87,18 @@ brew_script_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install
 # =========================================================
 # Helper functions
 # =========================================================
+
+# Function to print list of things to be installed
+print_commands() {
+  local commands=("sudo" "git" "brew" "gh" "zsh" "Oh My Zsh" "oh-my-posh")
+  local output=""
+  
+  for cmd in "${commands[@]}"; do
+    output+="• ${g}${cmd}${x} "
+  done
+  
+  echo -e "${output}•\n"
+}
 
 # Function to prompt the user for continuation
 # Usage: prompt_continue ["Custom question?"]
@@ -205,9 +218,10 @@ brew_shellenv() {
 # =========================================================
 
 print_title "Core System Installation Script"
-
 echo -e "\nThis script will install and configure following components on your system:"
-echo -e "• ${g}sudo${x} • ${g}git${x} • ${g}brew${x} • ${g}gh${x} • ${g}zsh${x} • ${g}Oh My Zsh${x} • ${g}oh-my-posh${x} •\n"
+print_commands
+
+# Prompt user to continue
 prompt_continue
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -273,12 +287,6 @@ else
 fi
 print_info "Git version:${x} $(git --version)"
 
-
-
-# Cloning Repositories ====================================
-
-
-
 # ---------------------------------------------------------
 # 3. Homebrew Setup
 # ---------------------------------------------------------
@@ -299,7 +307,7 @@ if ! is_installed brew; then
     fi
 
     # Excute Homebrew installation script
-    /bin/bash -c "$(curl -fsSL $brew_script_url)"
+    /bin/bash -c "$(curl -fsSL $brew_script_url)" &> "$TMP/brew_install.log"
     if [[ $? -eq 0 ]]; then
         print_done "Homebrew installed successfully."
     else
@@ -357,3 +365,7 @@ else
     print_done "GitHub CLI is already installed."
 fi
 print_info "GitHub CLI version:${x} $(gh --version | head -n1)"
+
+# ---------------------------------------------------------
+# 5. Cloning Repositories
+# ---------------------------------------------------------
