@@ -9,7 +9,7 @@
 # =========================================================
 
 # This script is meant to be run on a fresh system this way:
-# source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/refs/heads/main/init)
+# source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)
 
 # Script steps:
 # 1. sudo setup
@@ -17,47 +17,38 @@
 # 3. Homebrew setup
 # 4. GitHub CLI setup
 # 5. Cloning repositories
-# 6. Symlink directories and files
-# 7. Zsh setup
-# 8. Oh My Zsh setup
-# 9. oh-my-posh setup
-# - makes symbolic links for zsh, omz and oh-my-posh configurations
-# - sets locale settings
-# - reloads zsh to apply changes
+# 6. Zsh setup
+# 7. Oh My Zsh setup
+# 8. oh-my-posh setup
+# 9. Finalization
 
 local step=1
-local steps=5
+local steps=9
 
 # =========================================================
 # Initial environment setup
 # =========================================================
 
-# Create base directories
-mkdir -p $HOME/.cache
-mkdir -p $HOME/.cache/.zsh_sessions
-mkdir -p $HOME/.config
-mkdir -p $HOME/.local
-mkdir -p $HOME/.local/bin
-mkdir -p $HOME/.local/share
-mkdir -p $HOME/.local/state
-mkdir -p $HOME/.tmp
-mkdir -p $HOME/.venv
-
 ## Folders and paths
 export TMP=$HOME/.tmp
 export TEMP=$TMP
-export TEMPDIR=$TMP
-export TMPDIR=$TMP
+export ISLOGDIR=$TMP/InstallShell
 export BINDIR=$HOME/bin
 export LIBDIR=$HOME/lib
 export CONFDIR=$HOME/.config
 export CACHEDIR=$HOME/.cache
 export VENVDIR=$HOME/.venv
+# XDG
 export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-$CONFDIR}
 export XDG_CACHE_HOME=${XDG_CACHE_HOME:-$CACHEDIR}
 export XDG_BIN_HOME=${XDG_BIN_HOME:-$HOME/.local/bin}
 export XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 export XDG_STATE_HOME=${XDG_STATE_HOME:-$HOME/.local/state}
+# GitHub
+export GHDIR=$HOME/GitHub
+export GHBINDIR=$GHDIR/bin
+export GHLIBDIR=$GHDIR/lib
+export GHCONFDIR=$GHDIR/config
 
 # Temporary locale settings to avoid issues during installation
 export LANG=en_US.UTF-8
@@ -72,6 +63,17 @@ export HOMEBREW_NO_EMOJI=1
 export HOMEBREW_VERBOSE=0
 export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
+
+# Create base directories
+mkdir -p $CACHEDIR
+mkdir -p $CACHEDIR/.zsh_sessions
+mkdir -p $CONFDIR
+mkdir -p $XDG_BIN_HOME
+mkdir -p $XDG_BIN_HOME
+mkdir -p $XDG_DATA_HOME
+mkdir -p $XDG_STATE_HOME
+mkdir -p $ISLOGDIR
+mkdir -p $VENVDIR
 
 # Load colors
 r=$(tput setaf 1)    # red
@@ -217,9 +219,10 @@ brew_shellenv() {
 # Main function
 # =========================================================
 
-print_title "Core System Installation Script"
+print_title "Core Shell Installation Script"
 echo -e "\nThis script will install and configure following components on your system:"
 print_commands
+echo -e "Log directory: ${y}$ISLOGDIR${x}\n"
 
 # Prompt user to continue
 prompt_continue
@@ -236,7 +239,7 @@ print_header "Setting up sudo..."
 if ! is_installed sudo; then
     print_info "sudo not found. Installing sudo..."
     if is_debian_based; then
-        su -c "apt-get install -qq sudo 2> /dev/null"
+        su -c "apt-get install -qq sudo &> $ISLOGDIR/${step}_sudo_install.log"
         if [[ $? -eq 0 ]]; then
             print_done "sudo installed successfully."
         else
@@ -265,7 +268,7 @@ if ! is_installed git; then
     print_info "Git not found. Installing Git..."
 
     if is_macos; then
-        xcode-select --install &> "$TMP/git_install.log"
+        xcode-select --install &> "$ISLOGDIR/${step}_git_install.log"
         if [[ $? -eq 0 ]]; then
             print_done "Git installed successfully."
         else
@@ -273,7 +276,7 @@ if ! is_installed git; then
             exit 1
         fi
     elif is_linux; then
-        sudo apt update && sudo apt install git -y &> "$TMP/git_install.log"
+        sudo apt update && sudo apt install git -y &> "$ISLOGDIR/${step}_git_install.log"
         if [[ $? -eq 0 ]]; then
             print_done "Git installed successfully."
         else
@@ -307,7 +310,7 @@ if ! is_installed brew; then
     fi
 
     # Excute Homebrew installation script
-    /bin/bash -c "$(curl -fsSL $brew_script_url)" &> "$TMP/brew_install.log"
+    /bin/bash -c "$(curl -fsSL $brew_script_url)" &> "$ISLOGDIR/${step}_brew_install.log"
     if [[ $? -eq 0 ]]; then
         print_done "Homebrew installed successfully."
     else
@@ -369,3 +372,44 @@ print_info "GitHub CLI version:${x} $(gh --version | head -n1)"
 # ---------------------------------------------------------
 # 5. Cloning Repositories
 # ---------------------------------------------------------
+
+print_header "Cloning repositories..."
+
+cd $GHDIR
+repos=("bin" "config" "install" "lib")
+for repo in "${repos[@]}"; do
+    print_info "Cloning $repo..."
+    git clone "https://github.com/barabasz/${repo}.git" &> "$ISLOGDIR/${step}_git_${repo}_clone.log"
+    print_done "$repo successfully cloned."
+done
+
+print_info "Symlinking directories and files..."
+
+# logic
+
+# ---------------------------------------------------------
+# 6. Zsh Setup
+# ---------------------------------------------------------
+
+print_header "Setting up Zsh..."
+
+# ---------------------------------------------------------
+# 7. Oh My Zsh Setup
+# ---------------------------------------------------------
+
+print_header "Setting up Oh My Zsh..."
+
+# ---------------------------------------------------------
+# 8. oh-my-posh Setup
+# ---------------------------------------------------------
+
+print_header "Setting up oh-my-posh..."
+
+# ---------------------------------------------------------
+# 9. Finalization
+# ---------------------------------------------------------
+
+print_header "Finalizing installation..."
+
+# logic
+
