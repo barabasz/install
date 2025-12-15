@@ -294,40 +294,25 @@ is_omz_installed() {
 # Create symbolic link safely (universal zsh/bash function)
 # Usage: lns source target
 lns() {
-    local source target target_dir current
+    local source="$1"
+    local target="$2"
     
-    # Source must exist and be absolute
-    if [[ ! -e "$1" ]]; then
-        print_error "Source does not exist: $1"
+    # Validate source exists
+    if [[ ! -e "$source" ]]; then
+        print_error "Source does not exist: $source"
         return 1
     fi
-    source="$(realpath "$1")"
     
-    # Target - make absolute but don't require it to exist
-    if [[ "$2" = /* ]]; then
-        target="$2"
-    else
-        target="$PWD/$2"
-    fi
-    target_dir="$(dirname "$target")"
+    # Convert source to absolute path if relative
+    [[ "$source" != /* ]] && source="$PWD/$source"
     
-    # Create parent directory for the symlink if needed
-    if [[ ! -d "$target_dir" ]]; then
-        mkdir -p "$target_dir"
-    fi
+    # Remove target if exists (anything - link, file, directory)
+    rm -rf "$target"
     
-    # Handle existing target
-    if [[ -L "$target" ]]; then
-        current="$(readlink "$target")"
-        if [[ "$current" == "$source" ]]; then
-            return 0  # Already correct
-        else
-            rm "$target"  # Points elsewhere, remove
-        fi
-    elif [[ -e "$target" ]]; then
-        mv "$target" "${target}.bak"  # Backup real file/dir
-    fi
+    # Create parent directory if needed
+    mkdir -p "$(dirname "$target")"
     
+    # Create symlink
     ln -s "$source" "$target"
 }
 
