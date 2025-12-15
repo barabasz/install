@@ -553,12 +553,18 @@ for repo in "${repos[@]}"; do
     print_done "$repo successfully cloned."
 done
 
-print_info "Symlinking directories and files..."
+print_start "Symlinking directories and files..."
 
 # Library
 lns "$GHLIBDIR" "$LIBDIR"
 # Bindir
 lns "$GHBINDIR" "$BINDIR"
+# Apps
+repos=("bash" "gh" "git" "mc" "omz" "zsh")
+for app in "${repos[@]}"; do
+    print_info "Linking $app configuration..."
+    lnconf "$app"
+done
 
 # zsh cleanup and linking
 zsh_cleanup
@@ -573,14 +579,14 @@ print_header "Setting up Zsh..."
 
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
-    print_info "Zsh not found. Installing Zsh..."
+    print_start "Zsh not found. Installing Zsh..."
     run_silent "zsh_install" sudo apt install zsh -y || exit 1
 else
     print_done "Zsh is already installed."
 fi
 print_version zsh
 
-print_info "Setting Zsh as default shell..."
+print_start "Setting Zsh as default shell..."
 
 if is_zsh_default; then
     print_done "zsh is already the default shell."
@@ -594,7 +600,7 @@ else
 fi
 
 # Link Zsh configuration
-print_info "Linking zsh configuration..."
+print_start "Linking zsh configuration..."
 if zsh_cleanup; then
     print_done "Zsh configuration linked."
 else
@@ -603,7 +609,7 @@ else
 fi
 
 # bash fallback
-print_info "Linking fallback bash configuration..."
+print_start "Linking fallback bash configuration..."
 lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
 lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
 print_done "Bash configuration linked."
@@ -618,7 +624,7 @@ print_header "Setting up Oh My Zsh..."
 if ! is_omz_installed; then
     [[ ! -n $ZSH ]] && ZSH=$HOME/.config/omz
     [[ ! -n $ZSH_CUSTOM ]] && ZSH_CUSTOM=$ZSH/custom
-    print_info "Oh My Zsh not found. Installing Oh My Zsh..."
+    print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     install_silent "omz" "omz_install" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || exit 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
@@ -628,7 +634,7 @@ fi
 print_version omz version
 
 # Link Zsh configuration
-print_info "Re-linking zsh configuration..."
+print_start "Re-linking zsh configuration..."
 if zsh_cleanup; then
     print_done "Zsh configuration re-linked."
 else
