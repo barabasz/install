@@ -71,7 +71,7 @@ export NONINTERACTIVE=1
 # =========================================================
 
 # Load helper functions
-lib_script_url="https://raw.githubusercontent.com/barabasz/install/HEAD/common/install.lib.sh"
+lib_script_url="https://raw.githubusercontent.com/barabasz/install/HEAD/install.lib.sh"
 source <(curl -fsSL "$lib_script_url") || {
     echo "Failed to load helper functions from ${lib_script_url##*/}. Exiting."
     return 1
