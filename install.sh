@@ -178,7 +178,7 @@ print_info() {
 # Usage: print_start "some text"
 print_start() {
     local text="$1"
-    echo -e "${w}★ ${text}${x}"
+    echo -e "\n${w}★ ${text}${x}"
 }
 
 # Print done message with green checkmark
@@ -393,7 +393,6 @@ lnconf() {
 
 # Zsh cleanup function to remove old config files and relink .zshenv
 zsh_cleanup() {
-    lnconf zsh
     rm -f $HOME/.zshrc
     rm -f $HOME/.zprofile
     rm -f $HOME/.zlogin
@@ -560,7 +559,7 @@ lns "$GHLIBDIR" "$LIBDIR"
 # Bindir
 lns "$GHBINDIR" "$BINDIR"
 # Apps
-repos=("bash" "gh" "git" "mc" "omz" "zsh")
+repos=("bash" "gh" "git" "mc" "omp" "zsh")
 for app in "${repos[@]}"; do
     print_info "Linking $app configuration..."
     lnconf "$app"
