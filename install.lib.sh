@@ -118,10 +118,10 @@ print_header() {
     # Log section header to file
     {
         echo ""
-        echo "######################################"
-        echo "# SECTION: $text"
-        echo "# Time: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "######################################"
+        echo "█ SECTION $step/$steps: $text"
+        echo "█ Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "█ Elapsed: $(get_elapsed_time | sed 's/ (elapsed: //;s/)//')"
+        echo "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
     } >> "$LOGFILE"
 
     local len=$((${#text} + 2))
