@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.21-20251216"
+version="0.1.22-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -64,6 +64,7 @@ export LC_ALL=en_US.UTF-8
 # Brew environment variables for non-interactive installation
 export HOMEBREW_NO_ENV_HINTS=1
 export HOMEBREW_NO_EMOJI=1
+export HOMEBREW_NO_ENV_FILTERING=1
 export HOMEBREW_VERBOSE=0
 export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
@@ -184,10 +185,10 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    print_log "Installing Homebrew (output not logged - installer uses bash debug mode)"
-    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" &>/dev/null || {
+    print_log "Installing Homebrew with NONINTERACTIVE=1 (stderr captured)"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" 2>> "$LOGFILE" >/dev/null || {
         print_error "Failed to install Homebrew."
-        print_info "Check Homebrew installation manually"
+        print_info "See log: $LOGFILE"
         return 1
     }
     # Execute shellenv after brew installation
@@ -206,10 +207,10 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-print_log "Running brew update (output not logged - uses bash debug mode)"
-brew update &>/dev/null || print_warning "Failed to update Homebrew."
-print_log "Running brew upgrade (output not logged - uses bash debug mode)"
-brew upgrade &>/dev/null || print_warning "Failed to upgrade Homebrew packages."
+print_log "Running brew update --quiet (stderr captured)"
+brew update --quiet 2>> "$LOGFILE" || print_warning "Failed to update Homebrew."
+print_log "Running brew upgrade --quiet (stderr captured)"
+brew upgrade --quiet 2>> "$LOGFILE" || print_warning "Failed to upgrade Homebrew packages."
 print_done "Homebrew update completed."
 
 # ---------------------------------------------------------
