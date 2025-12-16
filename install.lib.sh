@@ -89,7 +89,7 @@ print_title() {
 # Usage: print_header "some text"
 print_header() {
     local text="${step}/${steps}: $1"
-    local len=${#text}+2
+    local len=$((${#text} + 2))
     local line=""
     local i
     for ((i=0; i<len; i++)); do line+="▔"; done
@@ -329,12 +329,12 @@ lnconf() {
 
 # Zsh cleanup function to remove old config files and relink .zshenv
 zsh_cleanup() {
-    rm -f $HOME/.zshrc
-    rm -f $HOME/.zprofile
-    rm -f $HOME/.zlogin
-    rm -f $HOME/.zlogout
-    rm -f $HOME/.bash_history
-    rm -f $HOME/.bash_logout
+    rm -f "$HOME/.zshrc"
+    rm -f "$HOME/.zprofile"
+    rm -f "$HOME/.zlogin"
+    rm -f "$HOME/.zlogout"
+    rm -f "$HOME/.bash_history"
+    rm -f "$HOME/.bash_logout"
     lns "$GHCONFDIR/zsh/.zshenv" "$HOME/.zshenv"
 }
 
@@ -343,27 +343,24 @@ zsh_cleanup() {
 git_clone() {
     local repo="https://github.com/barabasz/${1}.git"
     local log="git_${1}_clone"
-    run_silent "$log" git clone --progress $repo
-    if [[ $? -ne 0 ]]; then
+    if ! run_silent "$log" git clone --progress "$repo"; then
         print_error "Failed to clone ${1} repository."
         return 1
-    else
-        return 0
     fi
 }
 
 # Install Oh My Zsh plugin
 # Usage: install_omz_plugin "plugin_name"
 install_omz_plugin() {
-        local repo=https://github.com/zsh-users/$1.git
-        local pdir=$ZSH_CUSTOM/plugins/$1
+        local repo="https://github.com/zsh-users/$1.git"
+        local pdir="$ZSH_CUSTOM/plugins/$1"
         print_info "Installing $1"
-        [[ -d $pdir ]] && rm -rf $pdir
-        install_silent "$1" git clone $repo $pdir
+        [[ -d $pdir ]] && rm -rf "$pdir"
+        install_silent "$1" git clone "$repo" "$pdir"
 }
 
 # Uncomment locale in /etc/locale.gen
-function uncomment_locale() {
+uncomment_locale() {
     sudo sed -i "s/^# *\($1\)/\1/" /etc/locale.gen
     if grep -q "^$1" /etc/locale.gen; then
         echo "Locale $1 has been uncommented in /etc/locale.gen."
@@ -374,10 +371,10 @@ function uncomment_locale() {
 }
 
 # Install locale if not present
-function install_locale() {
-    if [[ -z "$(localectl list-locales | grep $1)" ]]; then
-        uncomment_locale $1
-        sudo locale-gen $1 | grep 'done'
+install_locale() {
+    if [[ -z "$(localectl list-locales | grep "$1")" ]]; then
+        uncomment_locale "$1"
+        sudo locale-gen "$1" | grep 'done'
     else
         echo "Locale $1 already exists."
     fi
@@ -388,69 +385,70 @@ setup_locale() {
     print_start 'Installing locales...'
     export LC_ALL=C.utf8
     sudo apt install -yq locales >/dev/null 2>&1
-    lang_pl="pl_PL.UTF-8"
-    lang_en="en_US.UTF-8"
-    install_locale $lang_pl
-    install_locale $lang_en
-    
-    printhead 'Setting locales...'
+    local lang_pl="pl_PL.UTF-8"
+    local lang_en="en_US.UTF-8"
+    install_locale "$lang_pl"
+    install_locale "$lang_en"
+
+    print_start 'Setting locales...'
     # English language
     export LANG=$lang_en
-    sudo update-locale LANG=$lang_en
+    sudo update-locale LANG="$lang_en"
     export LANGUAGE=$lang_en
-    sudo update-locale LANGUAGE=$lang_en
+    sudo update-locale LANGUAGE="$lang_en"
     export LC_MESSAGES=$lang_en
-    sudo update-locale LC_MESSAGES=$lang_en
+    sudo update-locale LC_MESSAGES="$lang_en"
     # Polish regiional settings
     export LC_ADDRESS=$lang_pl
-    sudo localectl set-locale LC_ADDRESS=$lang_pl
+    sudo localectl set-locale LC_ADDRESS="$lang_pl"
     export LC_COLLATE=$lang_pl
-    sudo localectl set-locale LC_COLLATE=$lang_pl
+    sudo localectl set-locale LC_COLLATE="$lang_pl"
     export LC_CTYPE=$lang_pl
-    sudo localectl set-locale LC_CTYPE=$lang_pl
+    sudo localectl set-locale LC_CTYPE="$lang_pl"
     export LC_IDENTIFICATION=$lang_pl
-    sudo localectl set-locale LC_IDENTIFICATION=$lang_pl
+    sudo localectl set-locale LC_IDENTIFICATION="$lang_pl"
     export LC_MEASUREMENT=$lang_pl
-    sudo localectl set-locale LC_MEASUREMENT=$lang_pl
+    sudo localectl set-locale LC_MEASUREMENT="$lang_pl"
     export LC_MONETARY=$lang_pl
-    sudo localectl set-locale LC_MONETARY=$lang_pl
+    sudo localectl set-locale LC_MONETARY="$lang_pl"
     export LC_NAME=$lang_pl
-    sudo localectl set-locale LC_NAME=$lang_pl
+    sudo localectl set-locale LC_NAME="$lang_pl"
     export LC_NUMERIC=$lang_pl
-    sudo localectl set-locale LC_NUMERIC=$lang_pl
+    sudo localectl set-locale LC_NUMERIC="$lang_pl"
     export LC_PAPER=$lang_pl
-    sudo localectl set-locale LC_PAPER=$lang_pl
+    sudo localectl set-locale LC_PAPER="$lang_pl"
     export LC_TELEPHONE=$lang_pl
-    sudo localectl set-locale LC_TELEPHONE=$lang_pl
+    sudo localectl set-locale LC_TELEPHONE="$lang_pl"
     export LC_TIME=$lang_pl
-    sudo localectl set-locale LC_TIME=$lang_pl
+    sudo localectl set-locale LC_TIME="$lang_pl"
     print_done 'Locales installed and set.'
 }
 
 # Set Warsaw timezone (Linux only)
-function set-warsaw-timezone() {
-    if [[ "$(osname)" != "macos" ]]; then
-        printhead 'Setting timezone...'
-        if [[ "$(cat /etc/timezone | grep -o 'Warsaw')" != "Warsaw" ]]; then
+set-warsaw-timezone() {
+    if ! is_macos; then
+        print_start 'Setting timezone...'
+        if [[ "$(grep -o 'Warsaw' /etc/timezone)" != "Warsaw" ]]; then
             sudo timedatectl set-timezone Europe/Warsaw
             sudo dpkg-reconfigure -f noninteractive tzdata
+            print_done 'Timezone set to Europe/Warsaw.'
         else
-            echo "Timezone: $(cat /etc/timezone)"
+            print_info "Timezone: $(cat /etc/timezone)"
         fi
     fi
 }
 
 # modify /etc/needrestart/needrestart.conf
 # use: needrestart-mod parameter value
-function needrestart-mod() {
-    filename=/etc/needrestart/needrestart.conf
+needrestart-mod() {
+    local filename=/etc/needrestart/needrestart.conf
     if [[ -f $filename ]]; then
-        sudo sed -i "s/^#\?\s\?\$nrconf{$1}.*/\$nrconf{$1} = $2;/" $filename
+        sudo sed -i "s/^#\?\s\?\$nrconf{$1}.*/\$nrconf{$1} = $2;/" "$filename"
     fi
 }
 
 # set needrestart to quiet mode
-function needrestart-quiet() {
+needrestart-quiet() {
     needrestart-mod verbosity 0
     needrestart-mod systemctl_combine 0
     needrestart-mod kernelhints 0
@@ -458,7 +456,7 @@ function needrestart-quiet() {
 }
 
 # set needrestart to verbose mode
-function needrestart-verbose() {
+needrestart-verbose() {
     needrestart-mod verbosity 1
     needrestart-mod systemctl_combine 1
     needrestart-mod kernelhints 1

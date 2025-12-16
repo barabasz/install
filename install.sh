@@ -92,17 +92,17 @@ echo -e "Log directory: ${y}$LOGDIR${x}\n"
 prompt_continue || return 1
 
 # Create base directories
-mkdir -p $TMP
-mkdir -p $LOGDIR
-mkdir -p $BINDIR
-mkdir -p $CONFDIR
-mkdir -p $CACHEDIR
-mkdir -p $ZSH_SESSIONS_DIR
-mkdir -p $VENVDIR
-mkdir -p $GHDIR
-mkdir -p $XDG_BIN_HOME
-mkdir -p $XDG_DATA_HOME
-mkdir -p $XDG_STATE_HOME
+mkdir -p "$TMP"
+mkdir -p "$LOGDIR"
+mkdir -p "$BINDIR"
+mkdir -p "$CONFDIR"
+mkdir -p "$CACHEDIR"
+mkdir -p "$ZSH_SESSIONS_DIR"
+mkdir -p "$VENVDIR"
+mkdir -p "$GHDIR"
+mkdir -p "$XDG_BIN_HOME"
+mkdir -p "$XDG_DATA_HOME"
+mkdir -p "$XDG_STATE_HOME"
 
 ## Set script counters
 step=1 && steps=9
@@ -118,7 +118,7 @@ if ! is_installed sudo; then
     if is_debian_based; then
         # Installing sudo
         install_silent "sudo" su -c "apt-get install -qq sudo" || return 1
-        local sudostr="$(whoami) ALL=(ALL:ALL) ALL"
+        sudostr="$(whoami) ALL=(ALL:ALL) ALL"
         su -c "echo '$sudostr' | sudo EDITOR='tee -a' visudo"
     fi
     print_done "sudo installed."
@@ -129,8 +129,7 @@ print_version sudo
 
 # Force sudo password prompt
 echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
-sudo echo > /dev/null
-if [[ $? -ne 0 ]]; then
+if ! sudo -v; then
     print_error "Failed to obtain sudo access."
     return 1
 else
@@ -181,7 +180,7 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    install_silent "brew" /bin/bash -c "$(curl -fsSL $brew_script_url)" || return 1
+    install_silent "brew" /bin/bash -c "$(curl -fsSL "$brew_script_url")" || return 1
     # Execute shellenv after brew installation
     brew_shellenv
     print_done "Homebrew installed."
@@ -197,9 +196,9 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-run_silent "brew_update" brew update
-run_silent "brew_upgrade" brew upgrade
-print_done "Homebrew updated."
+run_silent "brew_update" brew update || print_warning "Failed to update Homebrew."
+run_silent "brew_upgrade" brew upgrade || print_warning "Failed to upgrade Homebrew packages."
+print_done "Homebrew update completed."
 
 # ---------------------------------------------------------
 # 4. GitHub CLI Setup
@@ -213,19 +212,37 @@ if ! is_installed gh; then
     if is_macos; then
         install_silent "gh" brew install gh || return 1
     elif is_linux; then
-        (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
-            && sudo mkdir -p -m 755 /etc/apt/keyrings \
-            && out=$(mktemp) && wget -nv -O$out https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-            && cat $out | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-            && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-            && sudo mkdir -p -m 755 /etc/apt/sources.list.d \
-            && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-            && sudo apt update \
-            && sudo apt install gh -y
+        # Ensure wget is installed
+        if ! is_installed wget; then
+            run_silent "wget_install" sudo apt update || return 1
+            install_silent "wget" sudo apt install wget -y || return 1
+        fi
+
+        # Install GitHub CLI GPG key and repository
+        print_info "Setting up GitHub CLI repository..."
+        sudo mkdir -p -m 755 /etc/apt/keyrings
+        keyring_file=$(mktemp)
+        if wget -nv -O "$keyring_file" https://cli.github.com/packages/githubcli-archive-keyring.gpg; then
+            sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg < "$keyring_file" > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            rm -f "$keyring_file"
+        else
+            print_error "Failed to download GitHub CLI GPG key."
+            return 1
+        fi
+
+        # Add repository
+        sudo mkdir -p -m 755 /etc/apt/sources.list.d
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+            sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+
+        # Install gh
+        run_silent "apt_update_gh" sudo apt update || return 1
+        install_silent "gh" sudo apt install gh -y || return 1
     fi
     print_done "GitHub CLI installed."
 else
-    print_done "GitHub CLI is already installed."
+    print_info "GitHub CLI is already installed."
 fi
 print_version gh
 
@@ -236,7 +253,10 @@ print_version gh
 print_header "Repositories setup"
 
 print_start "Cloning repositories..."
-cd $GHDIR 
+cd "$GHDIR" || {
+    print_error "Failed to change directory to $GHDIR"
+    return 1
+}
 repos=("bin" "config" "install" "zsh-lib")
 for repo in "${repos[@]}"; do
     rm -rf "$GHDIR/$repo"
@@ -250,9 +270,9 @@ print_start "Symlinking directories and files..."
 lns "$GHLIBDIR" "$LIBDIR"
 
 # Remove old bin structure if exists
-[[ -e $BINDIR ]] && rm -rf $BINDIR
+[[ -e "$BINDIR" ]] && rm -rf "$BINDIR"
 # Create fresh directory
-mkdir -p $BINDIR
+mkdir -p "$BINDIR"
 # Create new bin structure
 dirs=("common" "linux" "macos" "test" "windows")
 for dir in "${dirs[@]}"; do
@@ -277,8 +297,9 @@ print_header "zsh setup"
 if ! is_macos && ! is_installed zsh; then
     print_start "Zsh not found. Installing Zsh..."
     run_silent "zsh_install" sudo apt install zsh -y || return 1
+    print_done "Zsh installed."
 else
-    print_done "Zsh is already installed."
+    print_info "Zsh is already installed."
 fi
 print_version zsh
 
@@ -313,18 +334,19 @@ print_header "Oh My Zsh setup"
 
 if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
-    install_silent "omz" sh -c "$(curl -fsSL $omz_script_url)" "" --unattended --keep-zshrc || return 1
+    install_silent "omz" sh -c "$(curl -fsSL "$omz_script_url")" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
 else
-    print_done "Oh My Zsh is already installed."
+    print_info "Oh My Zsh is already installed."
 fi
 print_version omz version
 
 # Install Oh My Zsh plugins
 print_start "Installing Oh My Zsh plugins..."
-install_omz_plugin zsh-autosuggestions
-install_omz_plugin zsh-syntax-highlighting
+install_omz_plugin zsh-autosuggestions || return 1
+install_omz_plugin zsh-syntax-highlighting || return 1
+print_done "Oh My Zsh plugins installed."
 
 # Link Zsh configuration
 print_start "Re-linking zsh configuration..."
@@ -340,11 +362,11 @@ fi
 # ---------------------------------------------------------
 
 omp_script_url="https://ohmyposh.dev/install.sh"
-print_header "Oh My Posh Setup"
+print_header "Oh My Posh setup"
 
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
-    curl -s $omp_script_url | bash -s -- -d "$XDG_BIN_HOME" || return 1
+    curl -s "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" || return 1
     print_done "oh-my-posh installed."
 else
     print_info "oh-my-posh is already installed."
@@ -370,11 +392,10 @@ if ! is_installed mc; then
     fi
     print_done "Midnight Commander installed."
 else
-    new_line
     print_info "Midnight Commander is already installed."
 fi
-# Reinstalling mc skins
-print_info "Reinstalling mc skins..."
+# Link mc skins
+print_info "Linking mc skins..."
 mkdir -p "$XDG_DATA_HOME/mc"
 lns "$GHCONFDIR/mc/skins" "$XDG_DATA_HOME/mc/skins"
 print_version mc
@@ -403,7 +424,6 @@ if ! is_installed htop; then
     fi
     print_done "htop installed."
 else
-    new_line
     print_info "htop is already installed."
 fi
 print_version htop
@@ -411,7 +431,7 @@ print_version htop
 # Bash cleanup and fallback configuration
 print_start "Fallback bash configuration..."
 # Remove old bash config files...
-rm -f $HOME/.bash*
+rm -f "$HOME"/.bash*
 # ...and link new ones as fallback
 lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
 lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
@@ -421,5 +441,5 @@ print_title "Installation Completed"
 echo -e "The core shell installation and configuration is now complete.\n"
 echo -e "Restart your terminal or log out and back in for all changes to take effect.\n"
 
-# Attempt to shwitch to zsh immediately
+# Attempt to switch to zsh immediately
 exec zsh
