@@ -104,6 +104,9 @@ mkdir -p "$XDG_STATE_HOME"
 ## Set script counters
 step=1 && steps=9
 
+## Record start time for elapsed time tracking
+START_TIME=$(date +%s)
+
 # ---------------------------------------------------------
 # 1. Sudo Setup (Linux only)
 # ---------------------------------------------------------

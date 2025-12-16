@@ -76,6 +76,25 @@ print_title() {
 # Usage: print_header "some text"
 print_header() {
     local text="${step}/${steps}: $1"
+
+    # Calculate elapsed time if START_TIME is set
+    if [[ -n "$START_TIME" ]]; then
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - START_TIME))
+        local hours=$((elapsed / 3600))
+        local minutes=$(((elapsed % 3600) / 60))
+        local seconds=$((elapsed % 60))
+
+        # Format elapsed time
+        if [[ $hours -gt 0 ]]; then
+            local elapsed_str=$(printf "%02d:%02d:%02d" $hours $minutes $seconds)
+        else
+            local elapsed_str=$(printf "%02d:%02d" $minutes $seconds)
+        fi
+
+        text="$text (elapsed: $elapsed_str)"
+    fi
+
     local len=$((${#text} + 2))
     local line=""
     local i
