@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.17-20251216"
+version="0.1.18-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -184,7 +184,12 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    install_silent "brew" /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" || return 1
+    print_log "Installing Homebrew (output not logged to avoid clutter)"
+    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" &>/dev/null || {
+        print_error "Failed to install Homebrew."
+        print_info "See Homebrew installation logs for details"
+        return 1
+    }
     # Execute shellenv after brew installation
     brew_shellenv
     print_done "Homebrew installed."
@@ -349,7 +354,12 @@ if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     # Remove existing $ZSH folder if present (from failed previous installation)
     [[ -d "$ZSH" ]] && rm -rf "$ZSH"
-    install_silent "omz" sh -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omz_script_url")" "" --unattended --keep-zshrc || return 1
+    print_log "Installing Oh My Zsh (output not logged to avoid clutter)"
+    sh -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omz_script_url")" "" --unattended --keep-zshrc &>/dev/null || {
+        print_error "Failed to install Oh My Zsh."
+        print_info "See log: $LOGFILE"
+        return 1
+    }
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
     print_done "Oh My Zsh installed."
