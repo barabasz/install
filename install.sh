@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.19-20251216"
+version="0.1.20-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -184,10 +184,10 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    print_log "Installing Homebrew (stdout not logged, stderr captured)"
-    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" 2>> "$LOGFILE" >/dev/null || {
+    print_log "Installing Homebrew (output not logged - installer uses bash debug mode)"
+    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" &>/dev/null || {
         print_error "Failed to install Homebrew."
-        print_info "See log: $LOGFILE"
+        print_info "Check Homebrew installation manually"
         return 1
     }
     # Execute shellenv after brew installation
