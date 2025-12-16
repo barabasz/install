@@ -386,11 +386,6 @@ fi
 # ---------------------------------------------------------
 
 print_header "Basic tools & finalization"
-# Refresh sudo timestamp before operations requiring root access
-if is_linux; then
-    sudo -v || { print_error "Failed to refresh sudo access."; return 1; }
-fi
-
 # Setup locales on Linux systems
 is_linux && setup_locale
 
