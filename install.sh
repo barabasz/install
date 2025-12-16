@@ -283,9 +283,12 @@ lns "$GHDIR/install/common" "$BINDIR/install"
 
 # Apps
 repos=("bash" "gh" "git" "mc" "nvim" "omp" "zsh")
+repos_done=()
 for app in "${repos[@]}"; do
-    lnconf "$app"
+    run_silent "repo_config_$app" lnconf "$app"
+    repos_done+=("$app")
 done
+print_info "Linked configurations for: ${repos_done[*]}"
 print_done "Directories and files symlinked."
 
 # ---------------------------------------------------------

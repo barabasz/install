@@ -76,6 +76,7 @@ print_title() {
 # Usage: print_header "some text"
 print_header() {
     local text="${step}/${steps}: $1"
+    local text_elapsed=""
 
     # Calculate elapsed time if START_TIME is set
     if [[ -n "$START_TIME" ]]; then
@@ -91,15 +92,14 @@ print_header() {
         else
             local elapsed_str=$(printf "%02d:%02d" $minutes $seconds)
         fi
-
-        text="$text (elapsed: $elapsed_str)"
+        text_elapsed=" ${w}(elapsed: $elapsed_str)${x}"
     fi
 
     local len=$((${#text} + 2))
     local line=""
     local i
     for ((i=0; i<len; i++)); do line+="▔"; done
-    echo -e "\n${y}█ $text${x}"
+    echo -e "\n${y}█ $text${x}$text_elapsed"
     echo -e "${y}$line${x}"
     step=$((step + 1))
 }
