@@ -202,14 +202,21 @@ print_version() {
     local cmd="$1"
     local opt="${2:---version}"
     local ver
-    
+
     if ! command -v "$cmd" &> /dev/null; then
         print_error "$cmd not found"
         return 1
     fi
-    
+
     ver=$("$cmd" "$opt" 2>&1 | head -n1)
     print_info "$cmd version:${x} $ver"
+}
+
+# Log message to file only (not displayed to user)
+# Usage: print_log "message"
+print_log() {
+    local message="$1"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $message" >> "$LOGFILE"
 }
 
 # Run command silently, log output to file

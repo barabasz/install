@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.16-20251216"
+version="0.1.17-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -125,6 +125,7 @@ if ! is_installed sudo; then
     print_done "sudo installed."
 else
     print_info "sudo is already installed."
+    print_log "sudo is already installed"
 fi
 print_version sudo
 
@@ -163,6 +164,7 @@ if ! is_installed git; then
     print_done "Git installed."
 else
     print_info "Git is already installed."
+    print_log "Git is already installed"
 fi
 print_version git
 
@@ -188,6 +190,7 @@ if ! is_installed brew; then
     print_done "Homebrew installed."
 else
     print_info "Homebrew is already installed."
+    print_log "Homebrew is already installed"
 fi
 print_version brew
 
@@ -198,8 +201,10 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-run_silent "brew_update" brew update || print_warning "Failed to update Homebrew."
-run_silent "brew_upgrade" brew upgrade || print_warning "Failed to upgrade Homebrew packages."
+print_log "Running brew update (output not logged to avoid clutter)"
+brew update &>/dev/null || print_warning "Failed to update Homebrew."
+print_log "Running brew upgrade (output not logged to avoid clutter)"
+brew upgrade &>/dev/null || print_warning "Failed to upgrade Homebrew packages."
 print_done "Homebrew update completed."
 
 # ---------------------------------------------------------
@@ -247,6 +252,7 @@ if ! is_installed gh; then
     print_done "GitHub CLI installed."
 else
     print_info "GitHub CLI is already installed."
+    print_log "GitHub CLI is already installed"
 fi
 print_version gh
 
@@ -291,6 +297,7 @@ for app in "${repos[@]}"; do
     repos_done+=("$app")
 done
 print_info "Linked configurations for: ${repos_done[*]}"
+print_log "Linked configurations for: ${repos_done[*]}"
 print_done "Directories and files symlinked."
 
 # ---------------------------------------------------------
@@ -305,6 +312,7 @@ if ! is_macos && ! is_installed zsh; then
     print_done "Zsh installed."
 else
     print_info "Zsh is already installed."
+    print_log "Zsh is already installed"
 fi
 print_version zsh
 
@@ -312,6 +320,7 @@ print_start "Setting Zsh as default shell..."
 
 if is_zsh_default; then
     print_done "zsh is already the default shell."
+    print_log "zsh is already the default shell"
 else
     if set_zsh_default; then
         print_done "Default shell changed to zsh."
@@ -346,6 +355,7 @@ if ! is_omz_installed; then
     print_done "Oh My Zsh installed."
 else
     print_info "Oh My Zsh is already installed."
+    print_log "Oh My Zsh is already installed"
 fi
 
 # Install Oh My Zsh plugins
@@ -387,6 +397,7 @@ if ! is_installed oh-my-posh; then
     fi
 else
     print_info "oh-my-posh is already installed."
+    print_log "oh-my-posh is already installed"
 fi
 
 # ---------------------------------------------------------
@@ -408,6 +419,7 @@ if ! is_installed mc; then
     print_done "Midnight Commander installed."
 else
     print_info "Midnight Commander is already installed."
+    print_log "Midnight Commander is already installed"
 fi
 # Link mc skins
 print_info "Linking mc skins..."
@@ -426,6 +438,7 @@ if ! is_installed bc; then
     print_done "bc installed."
 else
     print_info "bc is already installed."
+    print_log "bc is already installed"
 fi
 print_version bc
 
@@ -440,6 +453,7 @@ if ! is_installed htop; then
     print_done "htop installed."
 else
     print_info "htop is already installed."
+    print_log "htop is already installed"
 fi
 print_version htop
 
