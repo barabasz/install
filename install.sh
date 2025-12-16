@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.13-20251216"
+version="0.1.14-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -137,6 +137,18 @@ if ! sudo true; then
 else
     print_done "Sudo access granted."
 fi
+
+# Keep sudo timestamp alive during script execution (refresh every 60 seconds)
+(
+    while true; do
+        sleep 60
+        sudo -v 2>/dev/null || exit 0
+    done
+) &
+SUDO_REFRESH_PID=$!
+
+# Ensure background process is killed on script exit
+trap 'kill "$SUDO_REFRESH_PID" 2>/dev/null || true' EXIT INT TERM
 
 # Ensure kitty terminfo is installed (needs sudo)
 check_terminfo
@@ -443,6 +455,9 @@ rm -f "$HOME"/.bash*
 lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
 lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
 print_done "Bash configuration linked."
+
+# Stop background sudo timestamp refresh
+kill "$SUDO_REFRESH_PID" 2>/dev/null || true
 
 print_end_header "Installation Completed"
 echo -e "The core shell installation and configuration is now complete.\n"
