@@ -13,28 +13,15 @@
 
 # Load color variables
 load_colors() {
-    if is_installed tput; then
-        # Using tput for better compatibility
-        r=$(tput setaf 1)   # Red
-        g=$(tput setaf 2)   # Green
-        y=$(tput setaf 3)   # Yellow
-        b=$(tput setaf 4)   # Blue
-        p=$(tput setaf 5)   # Purple
-        c=$(tput setaf 6)   # Cyan
-        w=$(tput setaf 7)   # White
-        x=$(tput sgr0)      # Reset
-        return
-    else
-        # Fallback to ANSI codes
-        r='\033[0;31m'      # Red
-        g='\033[0;32m'      # Green
-        y='\033[0;33m'      # Yellow
-        b='\033[0;34m'      # Blue
-        p='\033[0;35m'      # Purple
-        c='\033[0;36m'      # Cyan
-        w='\033[0;37m'      # White
-        x='\033[0m'         # Reset
-    fi
+    # ANSI color codes - work universally without tput dependency
+    r='\033[0;31m'      # Red
+    g='\033[0;32m'      # Green
+    y='\033[0;33m'      # Yellow
+    b='\033[0;34m'      # Blue
+    p='\033[0;35m'      # Purple
+    c='\033[0;36m'      # Cyan
+    w='\033[0;37m'      # White
+    x='\033[0m'         # Reset
 }
 
 # Function to print list of things to be installed (universal zsh/bash)
