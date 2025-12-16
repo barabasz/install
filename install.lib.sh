@@ -72,28 +72,40 @@ print_title() {
     echo -e "$(repeat_char '▔' "$len")${x}"
 }
 
-# Print formatted header with underline
-# Usage: print_header "some text"
-print_header() {
-    local text="${step}/${steps}: $1"
-    local text_elapsed=""
-
-    # Calculate elapsed time if START_TIME is set
+# Calculate elapsed time if START_TIME is set
+get_elapsed_time() {
     if [[ -n "$START_TIME" ]]; then
         local current_time=$(date +%s)
         local elapsed=$((current_time - START_TIME))
         local hours=$((elapsed / 3600))
         local minutes=$(((elapsed % 3600) / 60))
         local seconds=$((elapsed % 60))
+        local output=""
 
         # Format elapsed time
         if [[ $hours -gt 0 ]]; then
-            local elapsed_str=$(printf "%02d:%02d:%02d" $hours $minutes $seconds)
+            output=$(printf "%02d:%02d:%02d" $hours $minutes $seconds)
         else
-            local elapsed_str=$(printf "%02d:%02d" $minutes $seconds)
+            output=$(printf "%02d:%02d" $minutes $seconds)
         fi
-        text_elapsed=" ${w}(elapsed: $elapsed_str)${x}"
+        echo -e " ${w}(elapsed: $output)${x}"
+    else
+        echo ""
     fi
+}
+
+# Print formatted header with underline
+# Usage: print_header "some text"
+print_header() {
+    local text=""
+    local text_elapsed=""
+    
+    if [[ -z "$step" || -z "$steps" ]]; then
+        text="$1"
+    else
+        text="${step}/${steps}: $1"
+    fi
+    text_elapsed=$(get_elapsed_time)
 
     local len=$((${#text} + 2))
     local line=""
@@ -101,6 +113,29 @@ print_header() {
     for ((i=0; i<len; i++)); do line+="▔"; done
     echo -e "\n${y}█ $text${x}$text_elapsed"
     echo -e "${y}$line${x}"
+    step=$((step + 1))
+}
+
+# Print formatted end header with underline (green color)
+# Usage: print_end_header "some text"
+print_end_header() {
+    local text="❇️ $1"
+    local text_elapsed=""
+    
+    # Calculate elapsed time if START_TIME is set
+    if [[ -n "$START_TIME" ]]; then
+        local elapsed_str
+        elapsed_str=$(get_elapsed_time)
+        text_elapsed=" ${w}(elapsed: $elapsed_str)${x}"
+    fi
+    text_elapsed=$(get_elapsed_time)
+
+    local len=$((${#text} + 2))
+    local line=""
+    local i
+    for ((i=0; i<len; i++)); do line+="▔"; done
+    echo -e "\n${g}█ $text${x}$text_elapsed"
+    echo -e "${g}$line${x}"
     step=$((step + 1))
 }
 

@@ -448,7 +448,7 @@ lns "$GHCONFDIR/bash/.bashrc" "$HOME/.bashrc"
 lns "$GHCONFDIR/bash/.bash_profile" "$HOME/.bash_profile"
 print_done "Bash configuration linked."
 
-print_title "Installation Completed"
+print_end_header "Installation Completed"
 echo -e "The core shell installation and configuration is now complete.\n"
 
 # Ensure terminal is in a sane state
