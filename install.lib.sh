@@ -166,9 +166,8 @@ install_silent() {
     local log="$LOGDIR/${step}_installing_${name}.log"
     shift
     local cmd="$*"
-    
+
     if "$@" &> "$log"; then
-        print_done "$name installed."
         return 0
     else
         print_error "Failed to install $name."
