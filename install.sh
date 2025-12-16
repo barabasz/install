@@ -206,11 +206,6 @@ print_done "Homebrew update completed."
 
 print_header "github cli setup"
 if ! is_installed gh; then
-    # Refresh sudo timestamp before any sudo operations (Linux only)
-    if is_linux; then
-        sudo -v || { print_error "Failed to refresh sudo access."; return 1; }
-    fi
-
     print_start "GitHub CLI not found. Installing gh..."
 
     if is_macos; then
@@ -298,9 +293,6 @@ print_done "Directories and files symlinked."
 # ---------------------------------------------------------
 
 print_header "zsh setup"
-# Refresh sudo timestamp
-sudo -v || { print_error "Failed to refresh sudo access."; return 1; }
-
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
     print_start "Zsh not found. Installing Zsh..."
@@ -389,9 +381,6 @@ fi
 # ---------------------------------------------------------
 
 print_header "Basic tools & finalization"
-# Refresh sudo timestamp (installation may have taken longer than sudo timeout)
-sudo -v || { print_error "Failed to refresh sudo access."; return 1; }
-
 # Setup locales on Linux systems
 is_linux && setup_locale
 
