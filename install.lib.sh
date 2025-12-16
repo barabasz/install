@@ -432,6 +432,8 @@ install_locale() {
 # Setup locales for the system
 setup_locale() {
     print_start 'Installing locales...'
+    # Refresh sudo timestamp before locale operations
+    sudo -v || return 1
     export LC_ALL=C.utf8
     sudo apt install -yq locales >/dev/null 2>&1
     local lang_pl="pl_PL.UTF-8"
