@@ -333,6 +333,8 @@ omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/i
 print_header "Oh My Zsh setup"
 if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
+    # Remove existing $ZSH folder if present (from failed previous installation)
+    [[ -d "$ZSH" ]] && rm -rf "$ZSH"
     install_silent "omz" sh -c "$(curl -fsSL "$omz_script_url")" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
