@@ -11,7 +11,7 @@
 version="0.1.12-20251216"
 
 # This script is meant to be run on a fresh system this way:
-# `source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
+# `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
 # and is compatible with both bash (Debian/Ubuntu default) and zsh (macOS default) shells.
 
 # Script steps:
@@ -74,7 +74,7 @@ export NONINTERACTIVE=1
 
 # Load helper functions
 lib_script_url="https://raw.githubusercontent.com/barabasz/install/HEAD/install.lib.sh"
-source <(curl -fsSL "${lib_script_url}?${RANDOM}") || {
+source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "${lib_script_url}?${RANDOM}") || {
     echo "Failed to load helper functions from ${lib_script_url##*/}. Exiting."
     return 1
 }
@@ -183,7 +183,7 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    install_silent "brew" /bin/bash -c "$(curl -fsSL "$brew_script_url")" || return 1
+    install_silent "brew" /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" || return 1
     # Execute shellenv after brew installation
     brew_shellenv
     print_done "Homebrew installed."
@@ -338,7 +338,7 @@ if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     # Remove existing $ZSH folder if present (from failed previous installation)
     [[ -d "$ZSH" ]] && rm -rf "$ZSH"
-    install_silent "omz" sh -c "$(curl -fsSL "$omz_script_url")" "" --unattended --keep-zshrc || return 1
+    install_silent "omz" sh -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omz_script_url")" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
     print_done "Oh My Zsh installed."
@@ -370,7 +370,7 @@ print_header "Oh My Posh setup"
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
     log="$LOGDIR/${step}_installing_oh-my-posh.log"
-    if curl -s "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" &> "$log"; then
+    if curl -s -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" &> "$log"; then
         print_done "oh-my-posh installed."
     else
         print_error "Failed to install oh-my-posh."
