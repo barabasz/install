@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.20-20251216"
+version="0.1.21-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -206,10 +206,10 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-print_log "Running brew update (stdout not logged, stderr captured)"
-brew update 2>> "$LOGFILE" >/dev/null || print_warning "Failed to update Homebrew."
-print_log "Running brew upgrade (stdout not logged, stderr captured)"
-brew upgrade 2>> "$LOGFILE" >/dev/null || print_warning "Failed to upgrade Homebrew packages."
+print_log "Running brew update (output not logged - uses bash debug mode)"
+brew update &>/dev/null || print_warning "Failed to update Homebrew."
+print_log "Running brew upgrade (output not logged - uses bash debug mode)"
+brew upgrade &>/dev/null || print_warning "Failed to upgrade Homebrew packages."
 print_done "Homebrew update completed."
 
 # ---------------------------------------------------------
