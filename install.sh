@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.0.3-20251216"
+version="0.1.12-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
