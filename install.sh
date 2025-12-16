@@ -112,7 +112,6 @@ START_TIME=$(date +%s)
 # ---------------------------------------------------------
 
 print_header "sudo setup"
-
 if ! is_installed sudo; then
     print_start "sudo not found. Installing sudo..."
     if is_debian_based; then
@@ -151,7 +150,6 @@ fi
 # ---------------------------------------------------------
 
 print_header "git setup"
-
 if ! is_installed git; then
     print_start "Git not found. Installing Git..."
     if is_macos; then
@@ -172,7 +170,6 @@ print_version git
 
 brew_script_url="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 print_header "homebrew setup"
-
 # Execute shellenv if brew is installed
 brew_shellenv
 
@@ -208,9 +205,11 @@ print_done "Homebrew update completed."
 # ---------------------------------------------------------
 
 print_header "github cli setup"
-
 if ! is_installed gh; then
     print_start "GitHub CLI not found. Installing gh..."
+
+    # Refresh sudo timestamp before any sudo operations (Linux only)
+    is_linux && sudo -v &>/dev/null
 
     if is_macos; then
         install_silent "gh" brew install gh || return 1
@@ -220,9 +219,6 @@ if ! is_installed gh; then
             run_silent "wget_install" sudo apt update || return 1
             install_silent "wget" sudo apt install wget -y || return 1
         fi
-
-        # Refresh sudo timestamp before multiple sudo operations
-        sudo -v
 
         # Install GitHub CLI GPG key and repository
         print_info "Setting up GitHub CLI repository..."
@@ -257,7 +253,6 @@ print_version gh
 # ---------------------------------------------------------
 
 print_header "Repositories setup"
-
 print_start "Cloning repositories..."
 cd "$GHDIR" || {
     print_error "Failed to change directory to $GHDIR"
@@ -298,7 +293,6 @@ print_done "Directories and files symlinked."
 # ---------------------------------------------------------
 
 print_header "zsh setup"
-
 # Refresh sudo timestamp
 sudo -v &>/dev/null
 
@@ -340,7 +334,6 @@ fi
 
 omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 print_header "Oh My Zsh setup"
-
 if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     install_silent "omz" sh -c "$(curl -fsSL "$omz_script_url")" "" --unattended --keep-zshrc || return 1
@@ -372,11 +365,16 @@ fi
 
 omp_script_url="https://ohmyposh.dev/install.sh"
 print_header "Oh My Posh setup"
-
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
-    curl -s "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" || return 1
-    print_done "oh-my-posh installed."
+    log="$LOGDIR/${step}_installing_oh-my-posh.log"
+    if curl -s "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" &> "$log"; then
+        print_done "oh-my-posh installed."
+    else
+        print_error "Failed to install oh-my-posh."
+        print_info "See log: $log"
+        return 1
+    fi
 else
     print_info "oh-my-posh is already installed."
 fi
@@ -386,7 +384,6 @@ fi
 # ---------------------------------------------------------
 
 print_header "Basic tools & finalization"
-
 # Refresh sudo timestamp (installation may have taken longer than sudo timeout)
 sudo -v &>/dev/null
 

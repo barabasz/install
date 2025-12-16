@@ -430,6 +430,7 @@ setup_locale() {
     export LC_TIME=$lang_pl
     sudo localectl set-locale LC_TIME="$lang_pl"
     print_done 'Locales installed and set.'
+    echo
 }
 
 # Set Warsaw timezone (Linux only)
