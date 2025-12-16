@@ -222,7 +222,7 @@ if ! is_installed gh; then
         print_info "Setting up GitHub CLI repository..."
         sudo mkdir -p -m 755 /etc/apt/keyrings
         keyring_file=$(mktemp)
-        if wget -nv -O "$keyring_file" https://cli.github.com/packages/githubcli-archive-keyring.gpg; then
+        if wget -q -O "$keyring_file" https://cli.github.com/packages/githubcli-archive-keyring.gpg; then
             sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg < "$keyring_file" > /dev/null
             sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
             rm -f "$keyring_file"
@@ -337,10 +337,10 @@ if ! is_omz_installed; then
     install_silent "omz" sh -c "$(curl -fsSL "$omz_script_url")" "" --unattended --keep-zshrc || return 1
     # Post-install cleanup
     rm -rf "$CONFDIR/zsh"
+    print_done "Oh My Zsh installed."
 else
     print_info "Oh My Zsh is already installed."
 fi
-print_version omz version
 
 # Install Oh My Zsh plugins
 print_start "Installing Oh My Zsh plugins..."
@@ -350,7 +350,7 @@ print_done "Oh My Zsh plugins installed."
 
 # Link Zsh configuration
 print_start "Re-linking zsh configuration..."
-if zsh_cleanup; then
+if zsh_cleanup && lnconf "zsh"; then
     print_done "Zsh configuration re-linked."
 else
     print_error "Failed to re-link Zsh configuration."
@@ -371,7 +371,6 @@ if ! is_installed oh-my-posh; then
 else
     print_info "oh-my-posh is already installed."
 fi
-print_version oh-my-posh
 
 # ---------------------------------------------------------
 # 9. Basic tools & finalization
