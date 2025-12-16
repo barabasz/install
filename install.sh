@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.26-20251216"
+version="0.1.27-20251217"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -182,7 +182,7 @@ check_terminfo
 # Update apt package lists on Linux systems
 if ! is_macos; then
     print_start "Updating apt package lists..."
-    run_silent "apt_update_initial" sudo apt update
+    run_silent sudo apt update
     print_done "Package lists updated."
 fi
 
@@ -196,7 +196,7 @@ if ! is_installed git; then
     if is_macos; then
         install_silent "git" xcode-select --install || return 1
     elif is_linux; then
-        run_silent "apt_update" sudo apt update || return 1
+        run_silent sudo apt update || return 1
         install_silent "git" sudo apt install git -y || return 1
     fi
     print_done "Git installed."
@@ -239,7 +239,7 @@ print_version brew
 
 # Disable analytics
 print_start "Disabling Homebrew analytics..."
-run_silent "brew_analytics_disable" brew analytics off
+run_silent brew analytics off
 print_done "Homebrew analytics disabled."
 
 # Update Homebrew
@@ -264,7 +264,6 @@ if ! is_installed gh; then
 
         # Ensure wget is installed
         if ! is_installed wget; then
-            run_silent "wget_install" sudo apt update || return 1
             install_silent "wget" sudo apt install wget -y || return 1
         fi
 
@@ -287,7 +286,7 @@ if ! is_installed gh; then
             sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
 
         # Install gh
-        run_silent "apt_update_gh" sudo apt update || return 1
+        run_silent sudo apt update || return 1
         install_silent "gh" sudo apt install gh -y || return 1
     fi
     print_done "GitHub CLI installed."
@@ -334,7 +333,7 @@ lns "$GHDIR/install/common" "$BINDIR/install"
 repos=("bash" "gh" "git" "mc" "nvim" "omp" "zsh")
 repos_done=()
 for app in "${repos[@]}"; do
-    run_silent "repo_config_$app" lnconf "$app"
+    run_silent lnconf "$app"
     repos_done+=("$app")
 done
 print_info "Linked configurations for: ${repos_done[*]}"
@@ -349,7 +348,7 @@ print_header "zsh setup"
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
     print_start "Zsh not found. Installing Zsh..."
-    run_silent "zsh_install" sudo apt install zsh -y || return 1
+    run_silent sudo apt install zsh -y || return 1
     print_done "Zsh installed."
 else
     print_info "Zsh is already installed."
