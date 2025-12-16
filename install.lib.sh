@@ -11,6 +11,12 @@
 # Below functions are used exclusively in install.sh
 # They are intentionally universal for both bash and zsh shells
 
+# Function to show current date/time and version
+show_date_time_version() {
+    local date="$(date '+%Y-%m-%d @ %H:%M:%S')"
+    echo -e "Date: $y${date}$x | Version: $y${version}${x}\n"
+}
+
 # Load color variables
 load_colors() {
     # ANSI color codes - work universally without tput dependency

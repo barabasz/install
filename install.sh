@@ -8,6 +8,8 @@
 # License: MIT
 # =========================================================
 
+version="0.0.3-20251216"
+
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
 # and is compatible with both bash (Debian/Ubuntu default) and zsh (macOS default) shells.
@@ -81,6 +83,7 @@ source <(curl -fsSL "${lib_script_url}?${RANDOM}") || {
 load_colors
 
 print_title "Core Shell Installation Script"
+show_date_time_version
 echo -e "This script will install and configure following components on your system:"
 print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh
 echo -e "Log directory: ${y}$LOGDIR${x}\n"
