@@ -30,7 +30,7 @@ print_commands() {
     for cmd in "$@"; do
         output+="• ${g}${cmd}${x} "
     done
-    printf "%s•\n" "$output"
+    echo -e "${output}•"
 }
 
 # Function to prompt the user for continuation
@@ -67,9 +67,9 @@ repeat_char() {
 print_title() {
     local text="$1"
     local len=$((${#text} + 4))
-    printf '%s%s\n' "$y" "$(repeat_char '▁' "$len")"
-    printf '%s█ %s █\n' "$y" "$text"
-    printf '%s%s%s\n' "$(repeat_char '▔' "$len")" "$x"
+    echo -e "${y}$(repeat_char '▁' "$len")"
+    echo -e "${y}█ $text █"
+    echo -e "$(repeat_char '▔' "$len")${x}"
 }
 
 # Print formatted header with underline
@@ -80,8 +80,8 @@ print_header() {
     local line=""
     local i
     for ((i=0; i<len; i++)); do line+="▔"; done
-    printf '\n%s%s%s%s\n' "$y" "█ " "$text" "$x"
-    printf '%s%s%s\n' "$y" "$line" "$x"
+    echo -e "\n${y}█ $text${x}"
+    echo -e "${y}$line${x}"
     step=$((step + 1))
 }
 
