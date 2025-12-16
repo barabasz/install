@@ -37,15 +37,13 @@ load_colors() {
     fi
 }
 
-# Function to print list of things to be installed
+# Function to print list of things to be installed (universal zsh/bash)
 print_commands() {
     local output=""
-    
     for cmd in "$@"; do
         output+="• ${g}${cmd}${x} "
     done
-
-    print "${output}•\n"
+    printf "%s•\n" "$output"
 }
 
 # Function to prompt the user for continuation
