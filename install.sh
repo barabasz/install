@@ -244,10 +244,8 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-print_log "Running brew update --quiet (stderr captured)"
-brew update --quiet 2>> "$LOGFILE" || print_warning "Failed to update Homebrew."
-print_log "Running brew upgrade --quiet (stderr captured)"
-brew upgrade --quiet 2>> "$LOGFILE" || print_warning "Failed to upgrade Homebrew packages."
+run_muted brew update || print_warning "Failed to update Homebrew."
+run_muted brew upgrade || print_warning "Failed to upgrade Homebrew packages."
 print_done "Homebrew update completed."
 
 # ---------------------------------------------------------

@@ -202,6 +202,7 @@ print_done() {
 # Usage: print_error "some text"
 print_error() {
     local text="$1"
+    print_log "ERROR: $text"
     echo -e "${r}✘ ${text}${x}\n"
 }
 
@@ -209,6 +210,7 @@ print_error() {
 # Usage: print_warning "some text"
 print_warning() {
     local text="$1"
+    print_log "WARNING: $text"
     echo -e "${y}⚠ ${text}${x}\n"
 }
 
@@ -232,13 +234,28 @@ print_version() {
 # Usage: print_log "message"
 print_log() {
     local message="$1"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $message" >> "$LOGFILE"
+    echo "█ $message" >> "$LOGFILE"
 }
+
+# Quote arguments with spaces
+# Usage: quote_args arg1 arg2 "arg with spaces" ...
+quote_args() {
+    local result=""
+    for arg in "$@"; do
+        if [[ "$arg" =~ [[:space:]] ]]; then
+            result+="\"$arg\" "
+        else
+            result+="$arg "
+        fi
+    done
+    printf '%s' "${result% }"
+}
+
 
 # Run command silently, log output to file
 # Usage: run_silent "operation_name" command [args...]
 # Example: run_silent "chmod" chmod +x "$FILE" || return 1
-run_silent() {
+run_silent_OLD() {
     local operation="$1"
     shift
     local cmd="$*"
@@ -260,6 +277,58 @@ run_silent() {
         return 1
     fi
 }
+
+
+
+
+# Run command normally, log all output to file
+# Usage: run_normal command [args...]
+run_normal() {
+    local cmd=$(quote_args "$@")
+    print_log "Executing normally: $cmd"
+    if "$@" >> "$LOGFILE" 2>&1; then
+        return 0
+    else
+        print_error "Failed to execute: $cmd"
+        print_info "See log: $LOGFILE"
+        return 1
+    fi
+}
+
+# Run command silently, log errors to file
+# Usage: run_silent command [args...]
+run_silent() {
+    local cmd=$(quote_args "$@")
+    print_log "Executing silently: $cmd"
+    if "$@" > /dev/null 2>> "$LOGFILE"; then
+        return 0
+    else
+        print_error "Failed to execute: ${cmd% }"
+        print_info "See log: $LOGFILE"
+        return 1
+    fi
+}
+
+# Run command muted, no output at all
+# Usage: run_muted command [args...]
+run_muted() {
+    local cmd=$(quote_args "$@")
+    print_log "Executing muted: $cmd"
+    if "$@" > /dev/null 2>&1; then
+        return 0
+    else
+        print_error "Failed to execute: ${cmd% }"
+        return 1
+    fi
+}
+
+
+
+
+
+
+
+
 
 # Install command silently, log output to file
 # Usage: install_silent "app_name" command [args...]
