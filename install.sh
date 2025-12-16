@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.23-20251216"
+version="0.1.24-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -85,7 +85,7 @@ load_colors
 print_title "Core Shell Installation Script"
 show_date_time_version
 echo -e "This script will install and configure following components on your system:"
-print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh
+print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh bat bc htop mc nvim
 echo -e "Log file: ${y}$LOGFILE${x}\n"
 
 # Prompt user to continue
@@ -431,6 +431,23 @@ mkdir -p "$XDG_DATA_HOME/mc"
 lns "$GHCONFDIR/mc/skins" "$XDG_DATA_HOME/mc/skins"
 print_version mc
 
+# bat -----------------------------------------------------
+if ! is_installed bat; then
+    print_start "bat not found. Installing bat..."
+    if is_macos; then
+        install_silent "bat" brew install bat || return 1
+    elif is_linux; then
+        install_silent "bat" sudo apt install bat -y || return 1
+    fi
+    print_done "bat installed."
+    # Create symlink for batcat if necessary
+    ln -s /usr/bin/batcat ~/.local/bin/bat
+else
+    print_info "bat is already installed."
+    print_log "bat is already installed"
+fi
+print_version bat
+
 # bc ------------------------------------------------------
 if ! is_installed bc; then
     print_start "bc not found. Installing bc..."
@@ -445,6 +462,21 @@ else
     print_log "bc is already installed"
 fi
 print_version bc
+
+# nvim ----------------------------------------------------
+if ! is_installed nvim; then
+    print_start "Neovim not found. Installing Neovim..."
+    if is_macos; then
+        install_silent "nvim" brew install neovim || return 1
+    elif is_linux; then
+        install_silent "nvim" sudo apt install neovim -y || return 1
+    fi
+    print_done "Neovim installed."
+else
+    print_info "Neovim is already installed."
+    print_log "Neovim is already installed"
+fi
+print_version nvim
 
 # htop ----------------------------------------------------
 if ! is_installed htop; then
