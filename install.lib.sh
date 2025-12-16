@@ -239,7 +239,8 @@ set_default_term() {
 # Verify and install kitty terminfo if missing
 check_terminfo() {
     if is_linux && ! has_kitty_terminfo; then
-        run_silent "kitty-terminfo" sudo apt install -y kitty-terminfo
+        # Install without logging (called before step counter is set)
+        sudo apt install -y kitty-terminfo &>/dev/null
         # Verify installation worked
         if ! has_kitty_terminfo; then
             print_warning "kitty terminfo not available; using xterm-256color as fallback."

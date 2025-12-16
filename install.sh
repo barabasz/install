@@ -80,9 +80,6 @@ source <(curl -fsSL "${lib_script_url}?${RANDOM}") || {
 # Load color variables
 load_colors
 
-# Ensure kitty terminfo is installed
-check_terminfo
-
 print_title "Core Shell Installation Script"
 echo -e "This script will install and configure following components on your system:"
 print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh
@@ -135,6 +132,9 @@ if ! sudo -v; then
 else
     print_done "Sudo access granted."
 fi
+
+# Ensure kitty terminfo is installed (needs sudo)
+check_terminfo
 
 # Update apt package lists on Linux systems
 if ! is_macos; then
