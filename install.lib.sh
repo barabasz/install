@@ -262,14 +262,14 @@ is_zsh_default() {
 set_zsh_default() {
     local zsh_path
     zsh_path=$(command -v zsh)
-    
+
     if is_macos; then
         sudo dscl . -create "/Users/$USER" UserShell "$zsh_path"
     else
         if ! grep -qx "$zsh_path" /etc/shells; then
             echo "$zsh_path" | sudo tee -a /etc/shells > /dev/null
         fi
-        chsh -s "$zsh_path"
+        sudo chsh -s "$zsh_path" "$USER"
     fi
 }
 

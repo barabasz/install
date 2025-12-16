@@ -218,6 +218,9 @@ if ! is_installed gh; then
             install_silent "wget" sudo apt install wget -y || return 1
         fi
 
+        # Refresh sudo timestamp before multiple sudo operations
+        sudo -v
+
         # Install GitHub CLI GPG key and repository
         print_info "Setting up GitHub CLI repository..."
         sudo mkdir -p -m 755 /etc/apt/keyrings
@@ -292,6 +295,9 @@ print_done "Directories and files symlinked."
 # ---------------------------------------------------------
 
 print_header "zsh setup"
+
+# Refresh sudo timestamp
+sudo -v &>/dev/null
 
 # Install Zsh if not present (Linux only)
 if ! is_macos && ! is_installed zsh; then
