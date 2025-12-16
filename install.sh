@@ -378,6 +378,9 @@ fi
 
 print_header "Basic tools & finalization"
 
+# Refresh sudo timestamp (installation may have taken longer than sudo timeout)
+sudo -v &>/dev/null
+
 # Setup locales on Linux systems
 is_linux && setup_locale
 
