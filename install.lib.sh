@@ -521,7 +521,7 @@ zsh_cleanup() {
 git_clone() {
     local repo="https://github.com/barabasz/${1}.git"
     local log="git_${1}_clone"
-    if ! run_silent "$log" git clone --progress "$repo"; then
+    if ! run_silent git clone --progress "$repo"; then
         print_error "Failed to clone ${1} repository."
         return 1
     fi
