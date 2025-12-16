@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.18-20251216"
+version="0.1.19-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -184,10 +184,10 @@ if ! is_installed brew; then
         sudo mkdir -p /home/linuxbrew/
         sudo chmod 755 /home/linuxbrew/
     fi
-    print_log "Installing Homebrew (output not logged to avoid clutter)"
-    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" &>/dev/null || {
+    print_log "Installing Homebrew (stdout not logged, stderr captured)"
+    /bin/bash -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$brew_script_url")" 2>> "$LOGFILE" >/dev/null || {
         print_error "Failed to install Homebrew."
-        print_info "See Homebrew installation logs for details"
+        print_info "See log: $LOGFILE"
         return 1
     }
     # Execute shellenv after brew installation
@@ -206,10 +206,10 @@ print_done "Homebrew analytics disabled."
 
 # Update Homebrew
 print_start "Updating Homebrew..."
-print_log "Running brew update (output not logged to avoid clutter)"
-brew update &>/dev/null || print_warning "Failed to update Homebrew."
-print_log "Running brew upgrade (output not logged to avoid clutter)"
-brew upgrade &>/dev/null || print_warning "Failed to upgrade Homebrew packages."
+print_log "Running brew update (stdout not logged, stderr captured)"
+brew update 2>> "$LOGFILE" >/dev/null || print_warning "Failed to update Homebrew."
+print_log "Running brew upgrade (stdout not logged, stderr captured)"
+brew upgrade 2>> "$LOGFILE" >/dev/null || print_warning "Failed to upgrade Homebrew packages."
 print_done "Homebrew update completed."
 
 # ---------------------------------------------------------
@@ -354,8 +354,8 @@ if ! is_omz_installed; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     # Remove existing $ZSH folder if present (from failed previous installation)
     [[ -d "$ZSH" ]] && rm -rf "$ZSH"
-    print_log "Installing Oh My Zsh (output not logged to avoid clutter)"
-    sh -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omz_script_url")" "" --unattended --keep-zshrc &>/dev/null || {
+    print_log "Installing Oh My Zsh (stdout not logged, stderr captured)"
+    sh -c "$(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omz_script_url")" "" --unattended --keep-zshrc 2>> "$LOGFILE" >/dev/null || {
         print_error "Failed to install Oh My Zsh."
         print_info "See log: $LOGFILE"
         return 1
@@ -391,14 +391,8 @@ omp_script_url="https://ohmyposh.dev/install.sh"
 print_header "Oh My Posh setup"
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
-    {
-        echo ""
-        echo "=========================================="
-        echo "Installing: oh-my-posh"
-        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "=========================================="
-    } >> "$LOGFILE"
-    if curl -s -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" >> "$LOGFILE" 2>&1; then
+    print_log "Installing oh-my-posh (stdout not logged, stderr captured)"
+    if curl -s -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" 2>> "$LOGFILE" >/dev/null; then
         print_done "oh-my-posh installed."
     else
         print_error "Failed to install oh-my-posh."
