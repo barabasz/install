@@ -120,7 +120,7 @@ print_info() {
 # Usage: print_start "some text"
 print_start() {
     local text="$1"
-    echo -e "\n${w}★ ${text}${x}"
+    echo -e "${w}★ ${text}${x}"
 }
 
 # Print done message with green checkmark

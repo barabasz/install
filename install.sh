@@ -206,10 +206,10 @@ print_done "Homebrew update completed."
 
 print_header "github cli setup"
 if ! is_installed gh; then
-    print_start "GitHub CLI not found. Installing gh..."
-
     # Refresh sudo timestamp before any sudo operations (Linux only)
-    is_linux && sudo -v &>/dev/null
+    is_linux && sudo -v
+
+    print_start "GitHub CLI not found. Installing gh..."
 
     if is_macos; then
         install_silent "gh" brew install gh || return 1
