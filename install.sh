@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.25-20251216"
+version="0.1.26-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -69,21 +69,59 @@ export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
 
 # =========================================================
+# Initial helper functions
+# =========================================================
+
+# Check if script is sourced remotely (via process substitution)
+# Returns 0 (true) if remote, 1 (false) if local file
+is_remote() {
+    local script_path
+    
+    # Detect script path - bash vs zsh compatible
+    if [[ -n "${BASH_SOURCE[0]}" ]]; then
+        script_path="${BASH_SOURCE[0]}"
+    elif [[ -n "${ZSH_VERSION}" ]]; then
+        script_path="${${(%):-%x}}"
+    else
+        return 1  # unknown, assume local
+    fi
+    
+    # Check if it's a process substitution (remote execution)
+    if [[ "${script_path}" == /dev/fd/* ]] || [[ "${script_path}" == /proc/self/fd/* ]]; then
+        return 0  # remote
+    else
+        return 1  # local file
+    fi
+}
+
+# =========================================================
 # Main function
 # =========================================================
 
 # Load helper functions
 lib_script_url="https://raw.githubusercontent.com/barabasz/install/HEAD/install.lib.sh"
-source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "${lib_script_url}?${RANDOM}") || {
-    echo "Failed to load helper functions from ${lib_script_url##*/}. Exiting."
-    return 1
-}
+if is_remote; then
+    script_type="remote"
+    # Remote execution - download from URL
+    source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" "${lib_script_url}?${RANDOM}") || {
+        echo "Failed to load helper functions from ${lib_script_url##*/}. Exiting."
+        return 1
+    }
+else
+    script_type="local"
+    # Local execution - try local file first
+    lib_local="$(cd "$(dirname "${BASH_SOURCE[0]:-${${(%):-%x}}}")" && pwd)/install.lib.sh"
+    source "${lib_local}" || {
+        echo "Failed to load local helper functions. Exiting."
+        return 1
+    }
+fi
 
 # Load color variables (uses ANSI codes, no terminal dependency)
 load_colors
 
 print_title "Core Shell Installation Script"
-show_date_time_version
+show_date_time_version && log_date_time_version
 echo -e "This script will install and configure following components on your system:"
 print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh bat bc htop mc nvim
 echo -e "Log file: ${y}$LOGFILE${x}\n"
@@ -350,7 +388,7 @@ fi
 
 omz_script_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 print_header "Oh My Zsh setup"
-if ! is_omz_installed; then
+if ! is_installed omz; then
     print_start "Oh My Zsh not found. Installing Oh My Zsh..."
     # Remove existing $ZSH folder if present (from failed previous installation)
     [[ -d "$ZSH" ]] && rm -rf "$ZSH"

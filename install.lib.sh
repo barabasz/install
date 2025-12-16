@@ -17,6 +17,16 @@ show_date_time_version() {
     echo -e "Date: $y${date}$x | Version: $y${version}${x}\n"
 }
 
+# Function to log current date/time and version to log file
+log_date_time_version() {
+    local date="$(date '+%Y-%m-%d @ %H:%M:%S')"
+    {
+        echo "Date: $date | Version: $version"
+        echo ""
+    } >> "$LOGFILE"
+
+}
+
 # Load color variables
 load_colors() {
     # ANSI color codes - work universally without tput dependency
@@ -72,17 +82,15 @@ repeat_char() {
 # Usage: print_title "some text"
 print_title() {
     local text="$1"
-    local len=$((${#text} + 4))
+    local len=$((${#text} + 4 + ${#script_type} + 3))
     echo -e "${y}$(repeat_char '▁' "$len")"
-    echo -e "${y}█ $text █"
+    echo -e "${y}█ $text ${w}($script_type) ${y}█"
     echo -e "$(repeat_char '▔' "$len")${x}"
     # Log title to file
     {
-        echo "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
-        echo "█ Core Shell Installation Script Log █"
-        echo "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
-        echo "$(show_date_time_version)"
-        echo ""
+        echo "$(repeat_char '▁' "$len")▁▁▁▁"
+        echo "█ $text Log ($script_type) █"
+        echo "$(repeat_char '▔' "$len")▔▔▔▔"
     } >> "$LOGFILE"
 }
 
@@ -280,12 +288,26 @@ install_silent() {
 }
 
 # Check if program is installed (executable exists in PATH)
+# with special case for "omz" (function check)
+# Usage: is_installed "command_name"
 is_installed() {
     [[ $# -eq 1 ]] || return 1
-    if [[ -n $ZSH_VERSION ]]; then
-        whence -p -- "$1" &>/dev/null
+    if [[ "$1" == "omz" ]]; then
+        # Check if omz function exists
+        if [[ -n "${BASH_VERSION}" ]]; then
+            [[ "$(type -t omz 2>/dev/null)" == "function" ]]
+        elif [[ -n "${ZSH_VERSION}" ]]; then
+            (( ${+functions[omz]} ))
+        else
+            type omz 2>/dev/null | grep -qw function
+        fi
     else
-        type -P -- "$1" &>/dev/null
+        # Check if command exists as executable
+        if [[ -n "${ZSH_VERSION}" ]]; then
+            whence -p -- "$1" &>/dev/null
+        else
+            type -P -- "$1" &>/dev/null
+        fi
     fi
 }
 
@@ -374,11 +396,6 @@ set_zsh_default() {
         fi
         sudo chsh -s "$zsh_path" "$USER"
     fi
-}
-
-# Check if Oh My Zsh is installed
-is_omz_installed() {
-    omz version &>/dev/null
 }
 
 # Create symbolic link safely (universal zsh/bash function)
