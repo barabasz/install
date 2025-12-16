@@ -438,7 +438,16 @@ print_done "Bash configuration linked."
 
 print_title "Installation Completed"
 echo -e "The core shell installation and configuration is now complete.\n"
-echo -e "Restart your terminal or log out and back in for all changes to take effect.\n"
 
-# Attempt to switch to zsh immediately
-exec zsh
+# Ensure terminal is in a sane state
+stty sane 2>/dev/null || true
+
+# Ensure TERM is set to a safe value if kitty-terminfo is not available
+if ! infocmp xterm-kitty &>/dev/null; then
+    export TERM=xterm-256color
+    export COLORTERM=truecolor
+fi
+
+echo -e "${y}Important:${x} For all changes to take effect, please:"
+echo -e "  1. Log out and back in, OR"
+echo -e "  2. Run: ${g}exec zsh${x}\n"
