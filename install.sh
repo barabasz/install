@@ -128,7 +128,7 @@ print_version sudo
 
 # Force sudo password prompt
 echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
-if ! sudo -v; then
+if ! sudo true; then
     print_error "Failed to obtain sudo access."
     return 1
 else
@@ -383,6 +383,11 @@ fi
 # ---------------------------------------------------------
 
 print_header "Basic tools & finalization"
+# Refresh sudo timestamp before operations requiring root access
+if is_linux; then
+    sudo -v || { print_error "Failed to refresh sudo access."; return 1; }
+fi
+
 # Setup locales on Linux systems
 is_linux && setup_locale
 
