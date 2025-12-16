@@ -103,15 +103,26 @@ get_elapsed_time() {
 # Print formatted header with underline
 # Usage: print_header "some text"
 print_header() {
+    # Keep sudo timestamp alive in each section
+    sudo -v
     local text=""
     local text_elapsed=""
-    
+
     if [[ -z "$step" || -z "$steps" ]]; then
         text="$1"
     else
         text="${step}/${steps}: $1"
     fi
     text_elapsed=$(get_elapsed_time)
+
+    # Log section header to file
+    {
+        echo ""
+        echo "######################################"
+        echo "# SECTION: $text"
+        echo "# Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "######################################"
+    } >> "$LOGFILE"
 
     local len=$((${#text} + 2))
     local line=""
@@ -202,18 +213,27 @@ print_version() {
 }
 
 # Run command silently, log output to file
-# Usage: run_silent "logfile" command [args...]
+# Usage: run_silent "operation_name" command [args...]
 # Example: run_silent "chmod" chmod +x "$FILE" || return 1
 run_silent() {
-    local log="$LOGDIR/${step}_$1.log"
+    local operation="$1"
     shift
     local cmd="$*"
-    
-    if "$@" &> "$log"; then
+
+    {
+        echo ""
+        echo "=========================================="
+        echo "Operation: $operation"
+        echo "Command: $cmd"
+        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "=========================================="
+    } >> "$LOGFILE"
+
+    if "$@" >> "$LOGFILE" 2>&1; then
         return 0
     else
         print_error "Failed to execute: '$cmd'"
-        print_info "See log: $log"
+        print_info "See log: $LOGFILE"
         return 1
     fi
 }
@@ -223,15 +243,23 @@ run_silent() {
 # Example: install_silent "gh" brew install gh || return 1
 install_silent() {
     local name="$1"
-    local log="$LOGDIR/${step}_installing_${name}.log"
     shift
     local cmd="$*"
 
-    if "$@" &> "$log"; then
+    {
+        echo ""
+        echo "=========================================="
+        echo "Installing: $name"
+        echo "Command: $cmd"
+        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "=========================================="
+    } >> "$LOGFILE"
+
+    if "$@" >> "$LOGFILE" 2>&1; then
         return 0
     else
         print_error "Failed to install $name."
-        print_info "See log: $log"
+        print_info "See log: $LOGFILE"
         return 1
     fi
 }
@@ -435,7 +463,14 @@ setup_locale() {
     # Refresh sudo timestamp before locale operations
     sudo -v || return 1
     export LC_ALL=C.utf8
-    sudo apt install -yq locales >/dev/null 2>&1
+    {
+        echo ""
+        echo "=========================================="
+        echo "Installing: locales package"
+        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "=========================================="
+    } >> "$LOGFILE"
+    sudo apt install -yq locales >> "$LOGFILE" 2>&1
     local lang_pl="pl_PL.UTF-8"
     local lang_en="en_US.UTF-8"
     install_locale "$lang_pl"

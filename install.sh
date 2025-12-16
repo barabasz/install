@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.15-20251216"
+version="0.1.16-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -32,7 +32,7 @@ version="0.1.15-20251216"
 ## Folders and paths
 export TMP=$HOME/.tmp
 export TEMP=$TMP
-export LOGDIR=$TMP/InstallShell
+export LOGFILE=$TMP/$(date +%Y%m%d-%H%M%S)-install.log
 export BINDIR=$HOME/bin
 export LIBDIR=$HOME/lib
 export CONFDIR=$HOME/.config
@@ -86,14 +86,13 @@ print_title "Core Shell Installation Script"
 show_date_time_version
 echo -e "This script will install and configure following components on your system:"
 print_commands sudo git brew gh zsh "Oh My Zsh" oh-my-posh
-echo -e "Log directory: ${y}$LOGDIR${x}\n"
+echo -e "Log file: ${y}$LOGFILE${x}\n"
 
 # Prompt user to continue
 prompt_continue || return 1
 
 # Create base directories
 mkdir -p "$TMP"
-mkdir -p "$LOGDIR"
 mkdir -p "$BINDIR"
 mkdir -p "$CONFDIR"
 mkdir -p "$CACHEDIR"
@@ -131,7 +130,7 @@ print_version sudo
 
 # Force sudo password prompt
 echo -e "\n${y}⚠ Enter your password for sudo access:${x}"
-if ! sudo true; then
+if ! sudo -v; then
     print_error "Failed to obtain sudo access."
     return 1
 else
@@ -372,12 +371,18 @@ omp_script_url="https://ohmyposh.dev/install.sh"
 print_header "Oh My Posh setup"
 if ! is_installed oh-my-posh; then
     print_start "oh-my-posh not found. Installing oh-my-posh..."
-    log="$LOGDIR/${step}_installing_oh-my-posh.log"
-    if curl -s -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" &> "$log"; then
+    {
+        echo ""
+        echo "=========================================="
+        echo "Installing: oh-my-posh"
+        echo "Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "=========================================="
+    } >> "$LOGFILE"
+    if curl -s -H "Cache-Control: no-cache" -H "Pragma: no-cache" "$omp_script_url" | bash -s -- -d "$XDG_BIN_HOME" >> "$LOGFILE" 2>&1; then
         print_done "oh-my-posh installed."
     else
         print_error "Failed to install oh-my-posh."
-        print_info "See log: $log"
+        print_info "See log: $LOGFILE"
         return 1
     fi
 else
