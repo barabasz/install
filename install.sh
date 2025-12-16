@@ -8,7 +8,7 @@
 # License: MIT
 # =========================================================
 
-version="0.1.22-20251216"
+version="0.1.23-20251216"
 
 # This script is meant to be run on a fresh system this way:
 # `source <(curl -fsSL -H "Cache-Control: no-cache" -H "Pragma: no-cache" https://raw.githubusercontent.com/barabasz/install/HEAD/install.sh)`
@@ -64,7 +64,6 @@ export LC_ALL=en_US.UTF-8
 # Brew environment variables for non-interactive installation
 export HOMEBREW_NO_ENV_HINTS=1
 export HOMEBREW_NO_EMOJI=1
-export HOMEBREW_NO_ENV_FILTERING=1
 export HOMEBREW_VERBOSE=0
 export HOMEBREW_DEBUG=0
 export NONINTERACTIVE=1
