@@ -76,6 +76,14 @@ print_title() {
     echo -e "${y}$(repeat_char '▁' "$len")"
     echo -e "${y}█ $text █"
     echo -e "$(repeat_char '▔' "$len")${x}"
+    # Log title to file
+    {
+        echo "▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁"
+        echo "█ Core Shell Installation Script Log █"
+        echo "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
+        echo "$(show_date_time_version)"
+        echo ""
+    } >> "$LOGFILE"
 }
 
 # Calculate elapsed time if START_TIME is set
@@ -94,7 +102,7 @@ get_elapsed_time() {
         else
             output=$(printf "%02d:%02d" $minutes $seconds)
         fi
-        echo -e " ${w}(elapsed: $output)${x}"
+        echo -$output
     else
         echo ""
     fi
@@ -113,17 +121,17 @@ print_header() {
     else
         text="${step}/${steps}: $1"
     fi
-    text_elapsed=$(get_elapsed_time)
 
     # Log section header to file
     {
         echo ""
-        echo "█ SECTION $step/$steps: $text"
+        echo "█ SECTION $text"
         echo "█ Time: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "█ Elapsed: $(get_elapsed_time | sed 's/ (elapsed: //;s/)//')"
+        echo "█ Elapsed: $(get_elapsed_time)"
         echo "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
     } >> "$LOGFILE"
 
+    text_elapsed=" ${w}(elapsed: $(get_elapsed_time))${x}"
     local len=$((${#text} + 2))
     local line=""
     local i
