@@ -77,6 +77,12 @@ source <(curl -fsSL "${lib_script_url}?${RANDOM}") || {
     return 1
 }
 
+# Set safe TERM if current one is not available (for tput in load_colors)
+if ! infocmp "$TERM" &>/dev/null; then
+    export TERM=xterm-256color
+    export COLORTERM=truecolor
+fi
+
 # Load color variables
 load_colors
 
