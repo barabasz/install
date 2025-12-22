@@ -122,24 +122,23 @@ print_header() {
     # Keep sudo timestamp alive in each section
     sudo -v
     local text=""
-    local text_elapsed=""
+    local time_elapsed="$(get_elapsed_time)"
+    local text_elapsed=" ${w}(elapsed: $time_elapsed)${x}"
 
     if [[ -z "$step" || -z "$steps" ]]; then
         text="$1"
     else
         text="${step}/${steps}: $1"
     fi
-
     # Log section header to file
     {
         echo ""
         echo "█ SECTION $text"
         echo "█ Time: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "█ Elapsed: $(get_elapsed_time)"
+        echo "█ Elapsed: $time_elapsed"
         echo "▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
     } >> "$LOGFILE"
 
-    text_elapsed=" ${w}(elapsed: $(get_elapsed_time))${x}"
     local len=$((${#text} + 2))
     local line=""
     local i
